@@ -39,6 +39,7 @@ class Exif
     const EXPOSURE              = 'exposure';
     const FILESIZE              = 'FileSize';
     const FILENAME              = 'FileName';
+    const FILETYPEEXTENSION     = 'FileTypeExtension';
     const FOCAL_LENGTH          = 'focalLength';
     const FOCAL_DISTANCE        = 'focalDistance';
     const FRAMERATE             = 'framerate';
@@ -828,6 +829,33 @@ class Exif
     public function setFileName($value)
     {
         $this->data[self::FILENAME] = $value;
+
+        return $this;
+    }
+
+    /**
+     * Returns the file type extension, if it exists
+     *
+     * @return string|boolean
+     */
+    public function getFileTypeExtension()
+    {
+        if (!isset($this->data[self::FILETYPEEXTENSION])) {
+            return false;
+        }
+
+        return $this->data[self::FILETYPEEXTENSION];
+    }
+
+    /**
+     * Sets the file type extension
+     *
+     * @param string $value
+     * @return \PHPExif\Exif
+     */
+    public function setFileTypeExtension($value)
+    {
+        $this->data[self::FILETYPEEXTENSION] = $value;
 
         return $this;
     }

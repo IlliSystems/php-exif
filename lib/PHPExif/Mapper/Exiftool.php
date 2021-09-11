@@ -36,6 +36,7 @@ class Exiftool implements MapperInterface
     const EXPOSURETIME             = 'ExifIFD:ExposureTime';
     const FILESIZE                 = 'System:FileSize';
     const FILENAME                 = 'System:FileName';
+    const FILETYPEEXTENSION        = 'System:FileTypeExtension';
     const FOCALLENGTH              = 'ExifIFD:FocalLength';
     const HEADLINE                 = 'IPTC:Headline';
     const IMAGEHEIGHT              = 'File:ImageHeight';
@@ -116,6 +117,7 @@ class Exiftool implements MapperInterface
         self::EXPOSURETIME             => Exif::EXPOSURE,
         self::FILESIZE                 => Exif::FILESIZE,
         self::FILENAME                 => Exif::FILENAME,
+        self::FILETYPEEXTENSION        => Exif::FILETYPEEXTENSION,
         self::FOCALLENGTH              => Exif::FOCAL_LENGTH,
         self::APPROXIMATEFOCUSDISTANCE => Exif::FOCAL_DISTANCE,
         self::HEADLINE                 => Exif::HEADLINE,
