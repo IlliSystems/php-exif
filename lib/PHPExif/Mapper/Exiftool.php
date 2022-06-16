@@ -27,7 +27,6 @@ class Exiftool implements MapperInterface
     const APERTURE                 = 'Composite:Aperture';
     const APPROXIMATEFOCUSDISTANCE = 'XMP-aux:ApproximateFocusDistance';
     const ARTIST                   = 'IFD0:Artist';
-    const CAPTION                  = 'XMP-acdsee';
     const CAPTIONABSTRACT          = 'IPTC:Caption-Abstract';
     const COLORSPACE               = 'ExifIFD:ColorSpace';
     const COPYRIGHT                = 'IFD0:Copyright';
@@ -57,7 +56,7 @@ class Exiftool implements MapperInterface
     const GPSLONGITUDE             = 'GPS:GPSLongitude';
     const GPSALTITUDE              = 'GPS:GPSAltitude';
     const IMGDIRECTION             = 'GPS:GPSImgDirection';
-    const DESCRIPTION              = 'ExifIFD:ImageDescription';
+    const DESCRIPTION              = 'IFD0:ImageDescription';
     const DESCRIPTION_XMP          = 'XMP-dc:Description';
     const MAKE                     = 'IFD0:Make';
     const LENS                     = 'ExifIFD:LensModel';
@@ -101,15 +100,11 @@ class Exiftool implements MapperInterface
     /**
      * Maps the ExifTool fields to the fields of
      * the \PHPExif\Exif class
-     *
-     * @var array
      */
-    protected $map = array(
+    protected array $map = array(
         self::APERTURE                 => Exif::APERTURE,
         self::ARTIST                   => Exif::AUTHOR,
         self::MODEL                    => Exif::CAMERA,
-        self::CAPTION                  => Exif::CAPTION,
-        self::DESCRIPTION_XMP          => Exif::CAPTION,
         self::COLORSPACE               => Exif::COLORSPACE,
         self::COPYRIGHT                => Exif::COPYRIGHT,
         self::DATETIMEORIGINAL         => Exif::CREATION_DATE,
@@ -143,6 +138,7 @@ class Exiftool implements MapperInterface
         self::LENS                     => Exif::LENS,
         self::LENS_ID                  => Exif::LENS,
         self::DESCRIPTION              => Exif::DESCRIPTION,
+        self::DESCRIPTION_XMP          => Exif::DESCRIPTION,
         self::SUBJECT                  => Exif::KEYWORDS,
         self::CONTENTIDENTIFIER        => Exif::CONTENTIDENTIFIER,
         self::MEDIA_GROUP_UUID         => Exif::CONTENTIDENTIFIER,
@@ -179,10 +175,7 @@ class Exiftool implements MapperInterface
         self::DATETIMEORIGINAL_PNG        => Exif::CREATION_DATE
     );
 
-    /**
-     * @var bool
-     */
-    protected $numeric = true;
+    protected bool $numeric = true;
 
     /**
      * Mutator method for the numeric property
@@ -190,7 +183,7 @@ class Exiftool implements MapperInterface
      * @param bool $numeric
      * @return \PHPExif\Mapper\Exiftool
      */
-    public function setNumeric($numeric)
+    public function setNumeric(bool $numeric) : Exiftool
     {
         $this->numeric = (bool) $numeric;
 
@@ -204,10 +197,10 @@ class Exiftool implements MapperInterface
      * @param array $data
      * @return array
      */
-    public function mapRawData(array $data)
+    public function mapRawData(array $data) : array
     {
         $mappedData = array();
-        $gpsData = array();
+        
         foreach ($data as $field => $value) {
             if (!array_key_exists($field, $this->map)) {
                 // silently ignore unknown fields
@@ -233,7 +226,8 @@ class Exiftool implements MapperInterface
                 case self::DATETIMEORIGINAL_WMV:
                     // DATETIMEORIGINAL_APPLE contains data on timezone
                     // only set value if DATETIMEORIGINAL_APPLE has not been used
-                    if (!isset($mappedData[Exif::CREATION_DATE])) {
+                    if (!isset($mappedData[Exif::CREATION_DATE])
+                            && preg_match('/^0000[-:]00[-:]00.00:00:00/', $value) === 0) {
                         try {
                             if (isset($data['ExifIFD:OffsetTimeOriginal'])) {
                                 try {
@@ -254,6 +248,9 @@ class Exiftool implements MapperInterface
 
                     break;
                 case self::DATETIMEORIGINAL_APPLE:
+                    if (preg_match('/^0000[-:]00[-:]00.00:00:00/', $value) === 1) {
+                        continue 2;
+                    }
                     try {
                         $value = new DateTime($value);
                     } catch (\Exception $e) {
@@ -353,10 +350,11 @@ class Exiftool implements MapperInterface
                 // Merge sources of keywords
                 case self::KEYWORDS:
                 case self::SUBJECT:
+                    $xval = is_array($value) ? $value : [$value];
                     if (empty($mappedData[Exif::KEYWORDS])) {
-                        $mappedData[Exif::KEYWORDS] = $value;
+                        $mappedData[Exif::KEYWORDS] = $xval;
                     } else {
-                        $tmp = array_values(array_unique(array_merge($mappedData[Exif::KEYWORDS], $value)));
+                        $tmp = array_values(array_unique(array_merge($mappedData[Exif::KEYWORDS], $xval)));
                         $mappedData[Exif::KEYWORDS] = $tmp;
                     }
 
@@ -393,7 +391,7 @@ class Exiftool implements MapperInterface
      * @param string $coordinates
      * @return float|false
      */
-    protected function extractGPSCoordinates($coordinates)
+    protected function extractGPSCoordinates(string $coordinates) : float|false
     {
         if (is_numeric($coordinates) === true || $this->numeric === true) {
             return ((float) $coordinates);

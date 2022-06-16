@@ -96,10 +96,9 @@ class FFprobe implements MapperInterface
      * @param array $data
      * @return array
      */
-    public function mapRawData(array $data)
+    public function mapRawData(array $data) : array
     {
         $mappedData = array();
-        $gpsData = array();
 
         foreach ($data as $field => $value) {
             if ($this->isSection($field) && is_array($value)) {
@@ -120,7 +119,8 @@ class FFprobe implements MapperInterface
                 case self::DATETIMEORIGINAL:
                     // QUICKTIME_DATE contains data on timezone
                     // only set value if QUICKTIME_DATE has not been used
-                    if (!isset($mappedData[Exif::CREATION_DATE])) {
+                    if (!isset($mappedData[Exif::CREATION_DATE])
+                            && preg_match('/^0000[-:]00[-:]00.00:00:00/', $value) === 0) {
                         try {
                             // Some cameras add a '/' between date and time
                             // we need to remove it
@@ -135,6 +135,9 @@ class FFprobe implements MapperInterface
 
                     break;
                 case self::QUICKTIME_DATE:
+                    if (preg_match('/^0000[-:]00[-:]00.00:00:00/', $value) === 1) {
+                        continue 2;
+                    }
                     try {
                         $value = new DateTime($value);
                     } catch (\Exception $e) {
@@ -195,7 +198,7 @@ class FFprobe implements MapperInterface
      * @param string $field
      * @return bool
      */
-    protected function isSection($field)
+    protected function isSection(string $field) : bool
     {
         return (in_array($field, $this->sections));
     }
@@ -208,7 +211,7 @@ class FFprobe implements MapperInterface
      * @param  string  &$field
      * @return bool
      */
-    protected function isFieldKnown(&$field)
+    protected function isFieldKnown(string &$field) : bool
     {
         $lcfField = lcfirst($field);
         if (array_key_exists($lcfField, $this->map)) {
@@ -233,7 +236,7 @@ class FFprobe implements MapperInterface
      * @param string $component
      * @return float
      */
-    protected function normalizeComponent($rational)
+    protected function normalizeComponent(string $rational) : float
     {
         $parts = explode('/', $rational, 2);
         if (count($parts) == 1) {
@@ -268,7 +271,7 @@ class FFprobe implements MapperInterface
         string $minutes,
         string $seconds,
         string $fraction
-    ) {
+    ) : float {
         if ($fraction !== '') {
             if ($seconds !== '') {
                 $seconds = $seconds . $fraction;
@@ -294,7 +297,7 @@ class FFprobe implements MapperInterface
      *
      * @return array
      */
-    public function readISO6709(string $val_ISO6709)
+    public function readISO6709(string $val_ISO6709) : array
     {
         $return = [
             'latitude' => null,
