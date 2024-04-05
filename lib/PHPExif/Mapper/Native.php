@@ -1,17 +1,12 @@
 <?php
-/**
- * PHP Exif Native Mapper
- *
- * @link        http://github.com/miljar/PHPExif for the canonical source repository
- * @copyright   Copyright (c) 2015 Tom Van Herreweghe <tom@theanalogguy.be>
- * @license     http://github.com/miljar/PHPExif/blob/master/LICENSE MIT License
- * @category    PHPExif
- * @package     Mapper
- */
 
 namespace PHPExif\Mapper;
 
 use PHPExif\Exif;
+use Safe\DateTime;
+
+use function Safe\preg_match;
+use function Safe\preg_replace;
 
 /**
  * PHP Exif Native Mapper
@@ -21,59 +16,59 @@ use PHPExif\Exif;
  * @category    PHPExif
  * @package     Mapper
  */
-class Native implements MapperInterface
+class Native extends AbstractMapper
 {
-    const APERTUREFNUMBER  = 'ApertureFNumber';
-    const ARTIST           = 'Artist';
-    const CAPTION          = 'caption';
-    const COLORSPACE       = 'ColorSpace';
-    const COPYRIGHT        = 'copyright';
-    const DATETIMEORIGINAL = 'DateTimeOriginal';
-    const CREDIT           = 'credit';
-    const EXPOSURETIME     = 'ExposureTime';
-    const FILESIZE         = 'FileSize';
-    const FILENAME         = 'FileName';
-    const FOCALLENGTH      = 'FocalLength';
-    const FOCUSDISTANCE    = 'FocusDistance';
-    const HEADLINE         = 'headline';
-    const HEIGHT           = 'Height';
-    const ISOSPEEDRATINGS  = 'ISOSpeedRatings';
-    const JOBTITLE         = 'jobtitle';
-    const KEYWORDS         = 'keywords';
-    const MIMETYPE         = 'MimeType';
-    const MODEL            = 'Model';
-    const ORIENTATION      = 'Orientation';
-    const SOFTWARE         = 'Software';
-    const SOURCE           = 'source';
-    const TITLE            = 'title';
-    const WIDTH            = 'Width';
-    const XRESOLUTION      = 'XResolution';
-    const YRESOLUTION      = 'YResolution';
-    const GPSLATITUDE      = 'GPSLatitude';
-    const GPSLONGITUDE     = 'GPSLongitude';
-    const GPSALTITUDE      = 'GPSAltitude';
-    const IMGDIRECTION     = 'GPSImgDirection';
-    const MAKE             = 'Make';
-    const LENS             = 'LensInfo';
-    const LENS_LR          = 'UndefinedTag:0xA434';
-    const LENS_TYPE        = 'LensType';
-    const DESCRIPTION      = 'caption';
-    const SUBJECT          = 'subject';
-    const FRAMERATE        = 'framerate';
-    const DURATION         = 'duration';
-    const CITY             = 'city';
-    const SUBLOCATION      = 'sublocation';
-    const STATE            = 'state';
-    const COUNTRY          = 'country';
+    public const APERTUREFNUMBER  = 'ApertureFNumber';
+    public const ARTIST           = 'Artist';
+    public const CAPTION          = 'caption';
+    public const COLORSPACE       = 'ColorSpace';
+    public const COPYRIGHT        = 'copyright';
+    public const DATETIMEORIGINAL = 'DateTimeOriginal';
+    public const CREDIT           = 'credit';
+    public const EXPOSURETIME     = 'ExposureTime';
+    public const FILESIZE         = 'FileSize';
+    public const FILENAME         = 'FileName';
+    public const FOCALLENGTH      = 'FocalLength';
+    public const FOCUSDISTANCE    = 'FocusDistance';
+    public const HEADLINE         = 'headline';
+    public const HEIGHT           = 'Height';
+    public const ISOSPEEDRATINGS  = 'ISOSpeedRatings';
+    public const JOBTITLE         = 'jobtitle';
+    public const KEYWORDS         = 'keywords';
+    public const MIMETYPE         = 'MimeType';
+    public const MODEL            = 'Model';
+    public const ORIENTATION      = 'Orientation';
+    public const SOFTWARE         = 'Software';
+    public const SOURCE           = 'source';
+    public const TITLE            = 'title';
+    public const WIDTH            = 'Width';
+    public const XRESOLUTION      = 'XResolution';
+    public const YRESOLUTION      = 'YResolution';
+    public const GPSLATITUDE      = 'GPSLatitude';
+    public const GPSLONGITUDE     = 'GPSLongitude';
+    public const GPSALTITUDE      = 'GPSAltitude';
+    public const IMGDIRECTION     = 'GPSImgDirection';
+    public const MAKE             = 'Make';
+    public const LENS             = 'LensInfo';
+    public const LENS_LR          = 'UndefinedTag:0xA434';
+    public const LENS_TYPE        = 'LensType';
+    public const DESCRIPTION      = 'ImageDescription';
+    public const SUBJECT          = 'subject';
+    public const FRAMERATE        = 'framerate';
+    public const DURATION         = 'duration';
+    public const CITY             = 'city';
+    public const SUBLOCATION      = 'sublocation';
+    public const STATE            = 'state';
+    public const COUNTRY          = 'country';
 
-    const SECTION_FILE      = 'FILE';
-    const SECTION_COMPUTED  = 'COMPUTED';
-    const SECTION_IFD0      = 'IFD0';
-    const SECTION_THUMBNAIL = 'THUMBNAIL';
-    const SECTION_COMMENT   = 'COMMENT';
-    const SECTION_EXIF      = 'EXIF';
-    const SECTION_ALL       = 'ANY_TAG';
-    const SECTION_IPTC      = 'IPTC';
+    public const SECTION_FILE      = 'FILE';
+    public const SECTION_COMPUTED  = 'COMPUTED';
+    public const SECTION_IFD0      = 'IFD0';
+    public const SECTION_THUMBNAIL = 'THUMBNAIL';
+    public const SECTION_COMMENT   = 'COMMENT';
+    public const SECTION_EXIF      = 'EXIF';
+    public const SECTION_ALL       = 'ANY_TAG';
+    public const SECTION_IPTC      = 'IPTC';
 
     /**
      * A list of section names
@@ -150,7 +145,7 @@ class Native implements MapperInterface
      * @param array $data
      * @return array
      */
-    public function mapRawData(array $data) : array
+    public function mapRawData(array $data): array
     {
         $mappedData = array();
 
@@ -168,9 +163,7 @@ class Native implements MapperInterface
             }
 
             $key = $this->map[$field];
-            if (is_string($value)) {
-                $value = trim($value);
-            }
+            $value = $this->trim($value);
 
             // manipulate the value if necessary
             switch ($field) {
@@ -186,9 +179,9 @@ class Native implements MapperInterface
                             } catch (\Exception $e) {
                                 $timezone = null;
                             }
-                            $value = new \DateTime($value, $timezone);
+                            $value = new DateTime($value, $timezone);
                         } else {
-                            $value = new \DateTime($value);
+                            $value = new DateTime($value);
                         }
                     } catch (\Exception $e) {
                         // Provided DateTimeOriginal or OffsetTimeOriginal invalid
@@ -198,6 +191,9 @@ class Native implements MapperInterface
                 case self::EXPOSURETIME:
                     if (!is_float($value)) {
                         $value = $this->normalizeComponent($value);
+                        if ($value === false) {
+                            continue 2;
+                        }
                     }
 
                     // Based on the source code of Exiftool (PrintExposureTime subroutine):
@@ -212,7 +208,7 @@ class Native implements MapperInterface
                 case self::FOCALLENGTH:
                     $parts = explode('/', $value);
                     // Avoid division by zero if focal length is invalid
-                    if (end($parts) == '0') {
+                    if (end($parts) === '0') {
                         $value = 0;
                     } else {
                         $value = (int) reset($parts) / (int) end($parts);
@@ -227,35 +223,69 @@ class Native implements MapperInterface
                     $value = (int) reset($resolutionParts);
                     break;
                 case self::GPSLATITUDE:
-                    $GPSLatitudeRef = (!(empty($data['GPSLatitudeRef'][0]))) ? $data['GPSLatitudeRef'][0] : '';
+                    $GPSLatitudeRef = 'N';
+                    if (array_key_exists('GPSLatitudeRef', $data)
+                        && $data['GPSLatitudeRef'] !== null && $data['GPSLatitudeRef'][0] !== '') {
+                        $GPSLatitudeRef = $data['GPSLatitudeRef'][0];
+                    }
                     $value = $this->extractGPSCoordinate((array)$value, $GPSLatitudeRef);
+                    if ($value === false) {
+                        continue 2;
+                    }
                     break;
                 case self::GPSLONGITUDE:
-                    $GPSLongitudeRef = (!(empty($data['GPSLongitudeRef'][0]))) ? $data['GPSLongitudeRef'][0] : '';
+                    $GPSLongitudeRef = 'E';
+                    if (array_key_exists('GPSLongitudeRef', $data)
+                        && $data['GPSLongitudeRef'] !== null && $data['GPSLongitudeRef'][0] !== '') {
+                        $GPSLongitudeRef = $data['GPSLongitudeRef'][0];
+                    }
                     $value = $this->extractGPSCoordinate((array)$value, $GPSLongitudeRef);
+                    if ($value === false) {
+                        continue 2;
+                    }
                     break;
                 case self::GPSALTITUDE:
-                    $flp = 1;
-                    if (!(empty($data['GPSAltitudeRef'][0]))) {
-                        $flp = ($data['GPSAltitudeRef'][0] == '1' || $data['GPSAltitudeRef'][0] == "\u{0001}") ? -1 : 1;
+                    $value = $this->normalizeComponent($value);
+                    if ($value === false) {
+                        continue 2;
                     }
-                    $value = $flp * $this->normalizeComponent($value);
+                    $flp = 1;
+                    if (array_key_exists('GPSAltitudeRef', $data) && $data['GPSAltitudeRef'][0] !== '') {
+                        $flp = (
+                            $data['GPSAltitudeRef'][0] === '1'
+                            || $data['GPSAltitudeRef'][0] === "\u{0001}"
+                        ) ? -1 : 1;
+                    }
+                    $value *= $flp;
                     break;
                 case self::IMGDIRECTION:
                     $value = $this->normalizeComponent($value);
+                    if ($value === false) {
+                        continue 2;
+                    }
                     break;
+                    // Merge sources of keywords
+                case self::KEYWORDS:
+                case self::SUBJECT:
+                    $xval = is_array($value) ? $value : [$value];
+                    if (!array_key_exists(Exif::KEYWORDS, $mappedData)) {
+                        $mappedData[Exif::KEYWORDS] = $xval;
+                    } else {
+                        $tmp = array_values(array_unique(array_merge($mappedData[Exif::KEYWORDS], $xval)));
+                        $mappedData[Exif::KEYWORDS] = $tmp;
+                    }
+
+                    continue 2;
                 case self::LENS_LR:
-                    if (empty($mappedData[Exif::LENS])) {
+                    if (!array_key_exists(Exif::LENS, $mappedData)) {
                         $mappedData[Exif::LENS] = $value;
                     }
                     continue 2;
-                    break;
                 case self::LENS_TYPE:
-                    if (empty($mappedData[Exif::LENS])) {
+                    if (!array_key_exists(Exif::LENS, $mappedData)) {
                         $mappedData[Exif::LENS] = $value;
                     }
                     continue 2;
-                    break;
             }
 
             // set end result
@@ -264,9 +294,8 @@ class Native implements MapperInterface
 
         // add GPS coordinates, if available
         if ((isset($mappedData[Exif::LATITUDE])) && (isset($mappedData[Exif::LONGITUDE]))) {
-            $mappedData[Exif::GPS] = sprintf('%s,%s', $mappedData[Exif::LATITUDE], $mappedData[Exif::LONGITUDE]);
-        } else {
-            unset($mappedData[Exif::GPS]);
+            $mappedData[Exif::GPS] =
+                sprintf('%s,%s', (string) $mappedData[Exif::LATITUDE], (string) $mappedData[Exif::LONGITUDE]);
         }
 
         return $mappedData;
@@ -278,9 +307,9 @@ class Native implements MapperInterface
      * @param string $field
      * @return bool
      */
-    protected function isSection(string $field) : bool
+    protected function isSection(string $field): bool
     {
-        return (in_array($field, $this->sections));
+        return (in_array($field, $this->sections, true));
     }
 
     /**
@@ -291,7 +320,7 @@ class Native implements MapperInterface
      * @param  string  &$field
      * @return bool
      */
-    protected function isFieldKnown(string &$field) : bool
+    protected function isFieldKnown(string &$field): bool
     {
         $lcfField = lcfirst($field);
         if (array_key_exists($lcfField, $this->map)) {
@@ -315,32 +344,35 @@ class Native implements MapperInterface
      *
      * @param array $coordinate
      * @param string $ref
-     * @return float
+     * @return float|false
      */
-    protected function extractGPSCoordinate(array $coordinate, string $ref) : float
+    protected function extractGPSCoordinate(array $coordinate, string $ref): float|false
     {
         $degrees = count($coordinate) > 0 ? $this->normalizeComponent($coordinate[0]) : 0;
         $minutes = count($coordinate) > 1 ? $this->normalizeComponent($coordinate[1]) : 0;
         $seconds = count($coordinate) > 2 ? $this->normalizeComponent($coordinate[2]) : 0;
-        $flip = ($ref == 'W' || $ref == 'S') ? -1 : 1;
-        return $flip * ($degrees + (float) $minutes / 60 + (float) $seconds / 3600);
+        if ($degrees === false || $minutes === false || $seconds === false) {
+            return false;
+        }
+        $flip = ($ref === 'W' || $ref === 'S') ? -1 : 1;
+        return round($flip * ($degrees + (float) $minutes / 60 + (float) $seconds / 3600), self::ROUNDING_PRECISION);
     }
 
     /**
      * Normalize component
      *
-     * @param string $component
-     * @return float
+     * @param string $rational
+     * @return float|false
      */
-    protected function normalizeComponent(string $rational) : float
+    protected function normalizeComponent(string $rational): float|false
     {
         $parts = explode('/', $rational, 2);
-        if (count($parts) == 1) {
+        if (count($parts) === 1) {
             return (float) $parts[0];
         }
         // case part[1] is 0, div by 0 is forbidden.
-        if ($parts[1] == 0 || !is_numeric($parts[0]) || !is_numeric($parts[1])) {
-            return (float) 0;
+        if ($parts[1] === '0' || !is_numeric($parts[0]) || !is_numeric($parts[1])) {
+            return false;
         }
         return (float) $parts[0] / $parts[1];
     }

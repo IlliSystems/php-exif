@@ -1,11 +1,11 @@
 <?php
-/**
- * @covers \PHPExif\Exif::<!public>
- */
+
+use PHPExif\Exif;
+
 class ExifTest extends \PHPUnit\Framework\TestCase
 {
     /**
-     * @var \PHPExif\Exif
+     * @var Exif
      */
     protected $exif;
 
@@ -14,19 +14,18 @@ class ExifTest extends \PHPUnit\Framework\TestCase
      */
     public function setUp(): void
     {
-        $this->exif = new \PHPExif\Exif();
+        $this->exif = new Exif();
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::__construct
      */
     public function testConstructorCallsSetData()
     {
         $input = array();
 
         // Get mock, without the constructor being called
-        $mock = $this->getMockBuilder('\\PHPExif\\Exif')
+        $mock = $this->getMockBuilder(Exif::class)
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -38,18 +37,17 @@ class ExifTest extends \PHPUnit\Framework\TestCase
             );
 
         // now call the constructor
-        $reflectedClass = new ReflectionClass('\\PHPExif\\Exif');
+        $reflectedClass = new ReflectionClass(Exif::class);
         $constructor = $reflectedClass->getConstructor();
         $constructor->invoke($mock, $input);
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getRawData
      */
     public function testGetRawData()
     {
-        $reflProperty = new \ReflectionProperty('\PHPExif\Exif', 'rawData');
+        $reflProperty = new \ReflectionProperty(Exif::class, 'rawData');
         $reflProperty->setAccessible(true);
 
         $this->assertEquals($reflProperty->getValue($this->exif), $this->exif->getRawData());
@@ -57,12 +55,11 @@ class ExifTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::setRawData
      */
     public function testSetRawData()
     {
         $testData = array('foo', 'bar', 'baz');
-        $reflProperty = new \ReflectionProperty('\PHPExif\Exif', 'rawData');
+        $reflProperty = new \ReflectionProperty(Exif::class, 'rawData');
         $reflProperty->setAccessible(true);
 
         $result = $this->exif->setRawData($testData);
@@ -73,11 +70,10 @@ class ExifTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getData
      */
     public function testGetData()
     {
-        $reflProperty = new \ReflectionProperty('\PHPExif\Exif', 'data');
+        $reflProperty = new \ReflectionProperty(Exif::class, 'data');
         $reflProperty->setAccessible(true);
 
         $this->assertEquals($reflProperty->getValue($this->exif), $this->exif->getData());
@@ -85,12 +81,11 @@ class ExifTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::setData
      */
     public function testSetData()
     {
         $testData = array('foo', 'bar', 'baz');
-        $reflProperty = new \ReflectionProperty('\PHPExif\Exif', 'data');
+        $reflProperty = new \ReflectionProperty(Exif::class, 'data');
         $reflProperty->setAccessible(true);
 
         $result = $this->exif->setData($testData);
@@ -102,49 +97,6 @@ class ExifTest extends \PHPUnit\Framework\TestCase
     /**
      *
      * @dataProvider providerUndefinedPropertiesReturnFalse
-     * @covers \PHPExif\Exif::getAperture
-     * @covers \PHPExif\Exif::getIso
-     * @covers \PHPExif\Exif::getExposure
-     * @covers \PHPExif\Exif::getExposureMilliseconds
-     * @covers \PHPExif\Exif::getFocusDistance
-     * @covers \PHPExif\Exif::getWidth
-     * @covers \PHPExif\Exif::getHeight
-     * @covers \PHPExif\Exif::getTitle
-     * @covers \PHPExif\Exif::getCaption
-     * @covers \PHPExif\Exif::getCopyright
-     * @covers \PHPExif\Exif::getKeywords
-     * @covers \PHPExif\Exif::getCamera
-     * @covers \PHPExif\Exif::getHorizontalResolution
-     * @covers \PHPExif\Exif::getVerticalResolution
-     * @covers \PHPExif\Exif::getSoftware
-     * @covers \PHPExif\Exif::getFocalLength
-     * @covers \PHPExif\Exif::getCreationDate
-     * @covers \PHPExif\Exif::getAuthor
-     * @covers \PHPExif\Exif::getCredit
-     * @covers \PHPExif\Exif::getSource
-     * @covers \PHPExif\Exif::getJobtitle
-     * @covers \PHPExif\Exif::getMimeType
-     * @covers \PHPExif\Exif::getFileSize
-     * @covers \PHPExif\Exif::getFileName
-     * @covers \PHPExif\Exif::getHeadline
-     * @covers \PHPExif\Exif::getColorSpace
-     * @covers \PHPExif\Exif::getOrientation
-     * @covers \PHPExif\Exif::getGPS
-     * @covers \PHPExif\Exif::getDescription
-     * @covers \PHPExif\Exif::getMake
-     * @covers \PHPExif\Exif::getAltitude
-     * @covers \PHPExif\Exif::getLatitude
-     * @covers \PHPExif\Exif::getLongitude
-     * @covers \PHPExif\Exif::getImgDirection
-     * @covers \PHPExif\Exif::getLens
-     * @covers \PHPExif\Exif::getContentIdentifier
-     * @covers \PHPExif\Exif::getFramerate
-     * @covers \PHPExif\Exif::getDuration
-     * @covers \PHPExif\Exif::getMicroVideoOffset
-     * @covers \PHPExif\Exif::getCity
-     * @covers \PHPExif\Exif::getSublocation
-     * @covers \PHPExif\Exif::getState
-     * @covers \PHPExif\Exif::getCountry
      * @param string $accessor
      */
     public function testUndefinedPropertiesReturnFalse($accessor)
@@ -210,12 +162,11 @@ class ExifTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getAperture
      */
     public function testGetAperture()
     {
         $expected = 'f/8.0';
-        $data[\PHPExif\Exif::APERTURE] = $expected;
+        $data[Exif::APERTURE] = $expected;
         $this->exif->setData($data);
 
         $this->assertEquals($expected, $this->exif->getAperture());
@@ -223,31 +174,28 @@ class ExifTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getIso
      */
     public function testGetIso()
     {
         $expected = 200;
-        $data[\PHPExif\Exif::ISO] = $expected;
+        $data[Exif::ISO] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getIso());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getExposure
      */
     public function testGetExposure()
     {
         $expected = '1/320';
-        $data[\PHPExif\Exif::EXPOSURE] = $expected;
+        $data[Exif::EXPOSURE] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getExposure());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getExposureMilliseconds
      */
     public function testGetExposureMilliseconds()
     {
@@ -260,7 +208,7 @@ class ExifTest extends \PHPUnit\Framework\TestCase
             $expected = reset($data);
             $value = end($data);
 
-            $data[\PHPExif\Exif::EXPOSURE] = $value;
+            $data[Exif::EXPOSURE] = $value;
             $this->exif->setData($data);
             $this->assertEquals($expected, $this->exif->getExposureMilliseconds());
         }
@@ -268,517 +216,436 @@ class ExifTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getFocusDistance
      */
     public function testGetFocusDistance()
     {
         $expected = '7.94m';
-        $data[\PHPExif\Exif::FOCAL_DISTANCE] = $expected;
+        $data[Exif::FOCAL_DISTANCE] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getFocusDistance());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getWidth
      */
     public function testGetWidth()
     {
         $expected = 500;
-        $data[\PHPExif\Exif::WIDTH] = $expected;
+        $data[Exif::WIDTH] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getWidth());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getHeight
      */
     public function testGetHeight()
     {
         $expected = 332;
-        $data[\PHPExif\Exif::HEIGHT] = $expected;
+        $data[Exif::HEIGHT] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getHeight());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getTitle
      */
     public function testGetTitle()
     {
         $expected = 'Morning Glory Pool';
-        $data[\PHPExif\Exif::TITLE] = $expected;
+        $data[Exif::TITLE] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getTitle());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getCaption
      */
     public function testGetCaption()
     {
         $expected = 'Foo Bar Baz';
-        $data[\PHPExif\Exif::CAPTION] = $expected;
+        $data[Exif::CAPTION] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getCaption());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getCopyright
      */
     public function testGetCopyright()
     {
         $expected = 'Miljar';
-        $data[\PHPExif\Exif::COPYRIGHT] = $expected;
+        $data[Exif::COPYRIGHT] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getCopyright());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getKeywords
      */
     public function testGetKeywords()
     {
         $expected = array('18-200', 'D90', 'USA', 'Wyoming', 'Yellowstone');
-        $data[\PHPExif\Exif::KEYWORDS] = $expected;
+        $data[Exif::KEYWORDS] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getKeywords());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getCamera
      */
     public function testGetCamera()
     {
         $expected = 'NIKON D90';
-        $data[\PHPExif\Exif::CAMERA] = $expected;
+        $data[Exif::CAMERA] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getCamera());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getHorizontalResolution
      */
     public function testGetHorizontalResolution()
     {
         $expected = 240;
-        $data[\PHPExif\Exif::HORIZONTAL_RESOLUTION] = $expected;
+        $data[Exif::HORIZONTAL_RESOLUTION] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getHorizontalResolution());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getVerticalResolution
      */
     public function testGetVerticalResolution()
     {
         $expected = 240;
-        $data[\PHPExif\Exif::VERTICAL_RESOLUTION] = $expected;
+        $data[Exif::VERTICAL_RESOLUTION] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getVerticalResolution());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getSoftware
      */
     public function testGetSoftware()
     {
         $expected = 'Adobe Photoshop Lightroom';
-        $data[\PHPExif\Exif::SOFTWARE] = $expected;
+        $data[Exif::SOFTWARE] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getSoftware());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getFocalLength
      */
     public function testGetFocalLength()
     {
         $expected = 18;
-        $data[\PHPExif\Exif::FOCAL_LENGTH] = $expected;
+        $data[Exif::FOCAL_LENGTH] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getFocalLength());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getCreationDate
      */
     public function testGetCreationDate()
     {
         $expected = '2011-06-07 20:01:50';
         $input = \DateTime::createFromFormat('Y-m-d H:i:s', $expected);
-        $data[\PHPExif\Exif::CREATION_DATE] = $input;
+        $data[Exif::CREATION_DATE] = $input;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getCreationDate()->format('Y-m-d H:i:s'));
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getAuthor
      */
     public function testGetAuthor()
     {
         $expected = 'John Smith';
-        $data[\PHPExif\Exif::AUTHOR] = $expected;
+        $data[Exif::AUTHOR] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getAuthor());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getHeadline
      */
     public function testGetHeadline()
     {
         $expected = 'Foobar Baz';
-        $data[\PHPExif\Exif::HEADLINE] = $expected;
+        $data[Exif::HEADLINE] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getHeadline());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getCredit
      */
     public function testGetCredit()
     {
         $expected = 'john.smith@example.com';
-        $data[\PHPExif\Exif::CREDIT] = $expected;
+        $data[Exif::CREDIT] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getCredit());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getSource
      */
     public function testGetSource()
     {
         $expected = 'FBB NEWS';
-        $data[\PHPExif\Exif::SOURCE] = $expected;
+        $data[Exif::SOURCE] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getSource());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getJobtitle
      */
     public function testGetJobtitle()
     {
         $expected = 'Yellowstone\'s geysers and pools';
-        $data[\PHPExif\Exif::JOB_TITLE] = $expected;
+        $data[Exif::JOB_TITLE] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getJobtitle());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getColorSpace
      */
     public function testGetColorSpace()
     {
         $expected = 'RGB';
-        $data[\PHPExif\Exif::COLORSPACE] = $expected;
+        $data[Exif::COLORSPACE] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getColorSpace());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getMimeType
      */
     public function testGetMimeType()
     {
         $expected = 'image/jpeg';
-        $data[\PHPExif\Exif::MIMETYPE] = $expected;
+        $data[Exif::MIMETYPE] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getMimeType());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getFileSize
      */
     public function testGetFileSize()
     {
         $expected = '27852365';
-        $data[\PHPExif\Exif::FILESIZE] = $expected;
+        $data[Exif::FILESIZE] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getFileSize());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getFileName
      */
     public function testGetFileName()
     {
         $expected = '27852365.jpg';
-        $data[\PHPExif\Exif::FILENAME] = $expected;
+        $data[Exif::FILENAME] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getFileName());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getOrientation
      */
     public function testGetOrientation()
     {
         $expected = 1;
-        $data[\PHPExif\Exif::ORIENTATION] = $expected;
+        $data[Exif::ORIENTATION] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getOrientation());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getGPS
      */
     public function testGetGPS()
     {
         $expected = '40.333452380556,-20.167314813889';
-        $data[\PHPExif\Exif::GPS] = $expected;
+        $data[Exif::GPS] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getGPS());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getDescription
      */
     public function testGetDescription()
     {
         $expected = 'Lorem ipsum';
-        $data[\PHPExif\Exif::DESCRIPTION] = $expected;
+        $data[Exif::DESCRIPTION] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getDescription());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getMake
      */
     public function testGetMake()
     {
         $expected = 'Make';
-        $data[\PHPExif\Exif::MAKE] = $expected;
+        $data[Exif::MAKE] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getMake());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getAltitude
      */
     public function testGetAltitude()
     {
         $expected = '8848';
-        $data[\PHPExif\Exif::ALTITUDE] = $expected;
+        $data[Exif::ALTITUDE] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getAltitude());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getLatitude
      */
     public function testGetLatitude()
     {
         $expected = '40.333452380556';
-        $data[\PHPExif\Exif::LATITUDE] = $expected;
+        $data[Exif::LATITUDE] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getLatitude());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getLongitude
      */
     public function testGetLongitude()
     {
         $expected = '-20.167314813889';
-        $data[\PHPExif\Exif::LONGITUDE] = $expected;
+        $data[Exif::LONGITUDE] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getLongitude());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getImgDirection
      */
     public function testGetImgDirection()
     {
         $expected = '180';
-        $data[\PHPExif\Exif::IMGDIRECTION] = $expected;
+        $data[Exif::IMGDIRECTION] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getImgDirection());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getLens
      */
     public function testGetLens()
     {
         $expected = '70 - 200mm';
-        $data[\PHPExif\Exif::LENS] = $expected;
+        $data[Exif::LENS] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getLens());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getContentIdentifier
      */
     public function testGetContentIdentifier()
     {
         $expected = 'C09DCB26-D321-4254-9F68-2E2E7FA16155';
-        $data[\PHPExif\Exif::CONTENTIDENTIFIER] = $expected;
+        $data[Exif::CONTENTIDENTIFIER] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getContentIdentifier());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getFramerate
      */
     public function testGetFramerate()
     {
         $expected = '24';
-        $data[\PHPExif\Exif::FRAMERATE] = $expected;
+        $data[Exif::FRAMERATE] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getFramerate());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getDuration
      */
     public function testGetDuration()
     {
         $expected = '1s';
-        $data[\PHPExif\Exif::DURATION] = $expected;
+        $data[Exif::DURATION] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getDuration());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getMicroVideoOffset
      */
     public function testGetMicroVideoOffset()
     {
         $expected = '3062730';
-        $data[\PHPExif\Exif::MICROVIDEOOFFSET] = $expected;
+        $data[Exif::MICROVIDEOOFFSET] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getMicroVideoOffset());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getCity
      */
     public function testGetCity()
     {
         $expected = 'New York';
-        $data[\PHPExif\Exif::CITY] = $expected;
+        $data[Exif::CITY] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getCity());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getSublocation
      */
     public function testGetSublocation()
     {
         $expected = 'sublocation';
-        $data[\PHPExif\Exif::SUBLOCATION] = $expected;
+        $data[Exif::SUBLOCATION] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getSublocation());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getState
      */
     public function testGetState()
     {
         $expected = 'New York';
-        $data[\PHPExif\Exif::STATE] = $expected;
+        $data[Exif::STATE] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getState());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::getCountry
      */
     public function testGetCountry()
     {
         $expected = 'USA';
-        $data[\PHPExif\Exif::COUNTRY] = $expected;
+        $data[Exif::COUNTRY] = $expected;
         $this->exif->setData($data);
         $this->assertEquals($expected, $this->exif->getCountry());
     }
 
     /**
      * @group exif
-     * @covers \PHPExif\Exif::setAperture
-     * @covers \PHPExif\Exif::setIso
-     * @covers \PHPExif\Exif::setExposure
-     * @covers \PHPExif\Exif::setFocusDistance
-     * @covers \PHPExif\Exif::setWidth
-     * @covers \PHPExif\Exif::setHeight
-     * @covers \PHPExif\Exif::setTitle
-     * @covers \PHPExif\Exif::setCaption
-     * @covers \PHPExif\Exif::setCopyright
-     * @covers \PHPExif\Exif::setKeywords
-     * @covers \PHPExif\Exif::setCamera
-     * @covers \PHPExif\Exif::setHorizontalResolution
-     * @covers \PHPExif\Exif::setVerticalResolution
-     * @covers \PHPExif\Exif::setSoftware
-     * @covers \PHPExif\Exif::setFocalLength
-     * @covers \PHPExif\Exif::setCreationDate
-     * @covers \PHPExif\Exif::setAuthor
-     * @covers \PHPExif\Exif::setCredit
-     * @covers \PHPExif\Exif::setSource
-     * @covers \PHPExif\Exif::setJobtitle
-     * @covers \PHPExif\Exif::setMimeType
-     * @covers \PHPExif\Exif::setFileSize
-     * @covers \PHPExif\Exif::setFileName
-     * @covers \PHPExif\Exif::setHeadline
-     * @covers \PHPExif\Exif::setColorSpace
-     * @covers \PHPExif\Exif::setOrientation
-     * @covers \PHPExif\Exif::setGPS
-     * @covers \PHPExif\Exif::setDescription
-     * @covers \PHPExif\Exif::setMake
-     * @covers \PHPExif\Exif::setAltitude
-     * @covers \PHPExif\Exif::setLongitude
-     * @covers \PHPExif\Exif::setLatitude
-     * @covers \PHPExif\Exif::setImgDirection
-     * @covers \PHPExif\Exif::setLens
-     * @covers \PHPExif\Exif::setContentIdentifier
-     * @covers \PHPExif\Exif::setFramerate
-     * @covers \PHPExif\Exif::setDuration
-     * @covers \PHPExif\Exif::setMicroVideoOffset
-     * @covers \PHPExif\Exif::setCity
-     * @covers \PHPExif\Exif::setSublocation
-     * @covers \PHPExif\Exif::setState
-     * @covers \PHPExif\Exif::setCountry
      */
     public function testMutatorMethodsSetInProperty()
     {
@@ -793,11 +660,26 @@ class ExifTest extends \PHPUnit\Framework\TestCase
             $setter = 'set' . ucfirst($value);
 
             switch ($value) {
+                case 'altitude':
+                case 'imgDirection':
+                case 'latitude':
+                case 'longitude':
+                    $coord = 1.2345;
+                    $this->exif->$setter($coord);
+                    $propertyValue = $reflProp->getValue($this->exif);
+                    $this->assertEquals($coord, $propertyValue[$value]);
+                    break;
                 case 'creationdate':
                     $now = new \DateTime();
                     $this->exif->$setter($now);
                     $propertyValue = $reflProp->getValue($this->exif);
                     $this->assertSame($now, $propertyValue[$value]);
+                    break;
+                case 'FileSize':
+                    $size = 10123456;
+                    $this->exif->$setter($size);
+                    $propertyValue = $reflProp->getValue($this->exif);
+                    $this->assertEquals($size, $propertyValue[$value]);
                     break;
                 case 'gps':
                     $coords = '40.333452380556,-20.167314813889';
@@ -808,6 +690,7 @@ class ExifTest extends \PHPUnit\Framework\TestCase
                     break;
                 case 'focalDistance':
                     $setter = 'setFocusDistance';
+                    // no break
                 default:
                     $this->exif->$setter($expected);
                     $propertyValue = $reflProp->getValue($this->exif);
@@ -818,59 +701,72 @@ class ExifTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * Test that the values returned by both adapters are equal
+     * Test that the values returned by different adapters are equal
      *
      * @group consistency
-     * @covers \PHPExif\Exif::getAperture
-     * @covers \PHPExif\Exif::getIso
-     * @covers \PHPExif\Exif::getExposure
-     * @covers \PHPExif\Exif::getExposureMilliseconds
-     * @covers \PHPExif\Exif::getFocusDistance
-     * @covers \PHPExif\Exif::getWidth
-     * @covers \PHPExif\Exif::getHeight
-     * @covers \PHPExif\Exif::getTitle
-     * @covers \PHPExif\Exif::getCaption
-     * @covers \PHPExif\Exif::getCopyright
-     * @covers \PHPExif\Exif::getKeywords
-     * @covers \PHPExif\Exif::getCamera
-     * @covers \PHPExif\Exif::getHorizontalResolution
-     * @covers \PHPExif\Exif::getVerticalResolution
-     * @covers \PHPExif\Exif::getSoftware
-     * @covers \PHPExif\Exif::getFocalLength
-     * @covers \PHPExif\Exif::getCreationDate
-     * @covers \PHPExif\Exif::getAuthor
-     * @covers \PHPExif\Exif::getCredit
-     * @covers \PHPExif\Exif::getSource
-     * @covers \PHPExif\Exif::getJobtitle
-     * @covers \PHPExif\Exif::getMimeType
-     * @covers \PHPExif\Exif::getFileSize
      */
     public function testAdapterConsistency()
     {
-        $reflClass = new \ReflectionClass('\PHPExif\Exif');
+        $reflClass = new \ReflectionClass(Exif::class);
         $methods = $reflClass->getMethods(ReflectionMethod::IS_PUBLIC);
         $testfiles = array(
             PHPEXIF_TEST_ROOT . '/files/morning_glory_pool_500.jpg',
             PHPEXIF_TEST_ROOT . '/files/dsc_5794.jpg',
-            PHPEXIF_TEST_ROOT . '/files/dsc_0003.jpg'
+            PHPEXIF_TEST_ROOT . '/files/dsc_0003.jpg',
+            PHPEXIF_TEST_ROOT . '/files/mongolia.jpeg',
+            PHPEXIF_TEST_ROOT . '/files/utf8.jpg',
         );
 
         $adapter_exiftool = new \PHPExif\Adapter\Exiftool();
+        $adapter_imagemagick = new \PHPExif\Adapter\ImageMagick();
         $adapter_native = new \PHPExif\Adapter\Native();
 
         foreach ($testfiles as $file) {
             $result_exiftool = $adapter_exiftool->getExifFromFile($file);
+            $result_imagemagick = $adapter_imagemagick->getExifFromFile($file);
             $result_native = $adapter_native->getExifFromFile($file);
 
             // find all Getter methods on the results and compare its output
             foreach ($methods as $method) {
                 $name = $method->getName();
-                if (strpos($name, 'get') !== 0 || $name == 'getRawData' || $name == 'getData' || $name == 'getColorSpace' || ($name == 'getLens' && $file == PHPEXIF_TEST_ROOT . '/files/dsc_5794.jpg')) {
+                if (strpos($name, 'get') !== 0 || $name === 'getRawData' || $name === 'getData' || $name === 'getColorSpace' ||
+                    ($name === 'getLens' && $file === PHPEXIF_TEST_ROOT . '/files/dsc_5794.jpg') ||
+                    ($file === PHPEXIF_TEST_ROOT . '/files/mongolia.jpeg' && ($name === 'getKeywords' || $name === 'getLens')) ||
+                    ($file === PHPEXIF_TEST_ROOT . '/files/utf8.jpg' && ($name === 'getAuthor' || $name === 'getDescription'))) {
                     continue;
                 }
                 $this->assertEquals(
                     call_user_func(array($result_native, $name)),
                     call_user_func(array($result_exiftool, $name)),
+                    'Adapter difference detected in method "' . $name . '" on image "' . basename($file) . '"'
+                );
+                $this->assertEquals(
+                    call_user_func(array($result_native, $name)),
+                    call_user_func(array($result_imagemagick, $name)),
+                    'Adapter difference detected in method "' . $name . '" on image "' . basename($file) . '"'
+                );
+            }
+        }
+
+        // Native adapter does not support PNG files so we can't use it in
+        // this case.
+        $testfiles = array(
+            PHPEXIF_TEST_ROOT . '/files/1945c1.png'
+        );
+
+        foreach ($testfiles as $file) {
+            $result_exiftool = $adapter_exiftool->getExifFromFile($file);
+            $result_imagemagick = $adapter_imagemagick->getExifFromFile($file);
+
+            // find all Getter methods on the results and compare its output
+            foreach ($methods as $method) {
+                $name = $method->getName();
+                if (strpos($name, 'get') !== 0 || $name === 'getRawData' || $name === 'getData' || $name === 'getColorSpace') {
+                    continue;
+                }
+                $this->assertEquals(
+                    call_user_func(array($result_exiftool, $name)),
+                    call_user_func(array($result_imagemagick, $name)),
                     'Adapter difference detected in method "' . $name . '" on image "' . basename($file) . '"'
                 );
             }

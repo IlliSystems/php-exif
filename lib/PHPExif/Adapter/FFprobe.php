@@ -14,6 +14,14 @@ namespace PHPExif\Adapter;
 use PHPExif\Exif;
 use InvalidArgumentException;
 use FFMpeg;
+use PHPExif\Mapper\FFprobe as MapperFFprobe;
+use PHPExif\Reader\PhpExifReaderException;
+use Safe\Exceptions\ExecException;
+
+use function Safe\exec;
+use function Safe\mime_content_type;
+use function Safe\filesize;
+use function Safe\array_replace_recursive;
 
 /**
  * PHP Exif FFProbe Reader Adapter
@@ -23,7 +31,7 @@ use FFMpeg;
  * @category    PHPExif
  * @package     Reader
  */
-class FFprobe extends AdapterAbstract
+class FFprobe extends AbstractAdapter
 {
     public const TOOL_NAME = 'ffprobe';
 
@@ -31,7 +39,7 @@ class FFprobe extends AdapterAbstract
      * Path to the exiftool binary
      */
     protected string $toolPath = '';
-    protected string $mapperClass = '\\PHPExif\\Mapper\\FFprobe';
+    protected string $mapperClass = MapperFFprobe::class;
 
 
     /**
@@ -67,11 +75,14 @@ class FFprobe extends AdapterAbstract
      */
     public function getToolPath(): string
     {
-        if (empty($this->toolPath)) {
-            // Do not use "which": not available on sh
-            $path = exec('command -v ' . self::TOOL_NAME);
-            // $path = exec('which ' . self::TOOL_NAME);
-            $this->setToolPath($path);
+        if ($this->toolPath === '') {
+            try {
+                // Do not use "which": not available on sh
+                $path = exec('command -v ' . self::TOOL_NAME);
+                $this->setToolPath($path);
+            } catch (ExecException) {
+                // Do nothing
+            }
         }
 
         return $this->toolPath;
@@ -81,9 +92,9 @@ class FFprobe extends AdapterAbstract
      * Reads & parses the EXIF data from given file
      *
      * @param string $file
-     * @return \PHPExif\Exif|boolean Instance of Exif object with data
+     * @return \PHPExif\Exif Instance of Exif object with data
      */
-    public function getExifFromFile(string $file): Exif|false
+    public function getExifFromFile(string $file): Exif
     {
         $mimeType = mime_content_type($file);
 
@@ -94,7 +105,7 @@ class FFprobe extends AdapterAbstract
         }
 
         if ($mimeType === 'application/octet-stream' &&
-            in_array(strtolower(pathinfo($file, PATHINFO_EXTENSION)), ['mp4', 'mp4v', 'mpg4'])) {
+            in_array(strtolower(pathinfo($file, PATHINFO_EXTENSION)), ['mp4', 'mp4v', 'mpg4'], true)) {
             // @codeCoverageIgnoreStart
             $mimeType = 'video/mp4';
             // @codeCoverageIgnoreEnd
@@ -102,7 +113,7 @@ class FFprobe extends AdapterAbstract
 
         // file is not a video -> wrong adapter
         if (strpos($mimeType, 'video') !== 0) {
-            return false;
+            throw new PhpExifReaderException('Could not read the video');
         }
 
         $ffprobe = FFMpeg\FFProbe::create(array(
@@ -120,6 +131,7 @@ class FFprobe extends AdapterAbstract
         $data = array_replace_recursive($stream, $format, $additional_data);
 
         // Force UTF8 encoding
+        /** @var array */
         $data = $this->convertToUTF8($data);
 
         // map the data:

@@ -1,12 +1,12 @@
-# [PHPExif v0.7.5](http://github.com/LycheeOrg/php-exif)
+# [PHPExif](http://github.com/LycheeOrg/php-exif)
 
 [![GitHub Release][release-shield]](https://github.com/LycheeOrg/php-exif/releases)
-[![PHP 8.0 & 8.1][php-shield]](https://github.com/LycheeOrg/php-exif#installation-composer)
-[![MIT License][license-shield]](https://github.com/LycheeOrg/php-exif/blob/master/LICENSE)
-<br>
-[![Build Status](https://github.com/LycheeOrg/php-exif/workflows/Tests/badge.svg)](https://github.com/LycheeOrg/php-exif/actions)
-[![Coverage Status](https://codecov.io/gh/LycheeOrg/php-exif/branch/master/graph/badge.svg)](https://codecov.io/gh/LycheeOrg/php-exif)
-[![Code Climate](https://api.codeclimate.com/v1/badges/f15042d535274f36c5a2/maintainability)](https://codeclimate.com/github/LycheeOrg/php-exif/maintainability)
+[![PHP 8.2 & 8.3][php-shield]](https://github.com/LycheeOrg/php-exif#installation-composer)
+[![MIT License][license-shield]](https://github.com/LycheeOrg/php-exif/blob/master/LICENSE)  
+  
+[![Build Status][build-shield]](https://github.com/LycheeOrg/php-exif/actions/workflows/php.yml)
+[![Coverage Status][coverage-shield]](https://codecov.io/gh/LycheeOrg/php-exif)
+[![Code Climate][climate-shield]](https://codeclimate.com/github/LycheeOrg/php-exif/maintainability)
 
 PHPExif is a library which gives you easy access to the EXIF meta-data of an image or video.
 
@@ -45,6 +45,16 @@ Have a bug or a feature request? [Please open a new issue](https://github.com/Ly
 
 ## Contributors
 
+* [ildyria](https://github.com/ildyria)
+* [d7415](https://github.com/d7415)
+* [kamil4](https://github.com/kamil4)
+* [nagmat84](https://github.com/nagmat84)
+* [qwerty287](https://github.com/qwerty287)
+
+#### Past Contributors
+
+Thank you for your help!
+
 * [Tom Van Herreweghe](http://github.com/Miljar)
 * [Ingewikkeld](https://github.com/Ingewikkeld)
 * [Christophe Singer](https://github.com/wasinger)
@@ -53,9 +63,8 @@ Have a bug or a feature request? [Please open a new issue](https://github.com/Ly
 * [Marek Szymczuk](https://github.com/bonzai)
 * [Scott Pringle](https://github.com/Luciam91)
 * [tmp-hallenser](https://github.com/tmp-hallenser)
-* [kamil4](https://github.com/kamil4)
-* [ildyria](https://github.com/ildyria)
-* [nagmat84](https://github.com/nagmat84)
+* [icager](https://github.com/icager)
+
 
 ## License
 
@@ -63,5 +72,9 @@ Have a bug or a feature request? [Please open a new issue](https://github.com/Ly
 
 
 [release-shield]: https://img.shields.io/github/release-pre/LycheeOrg/php-exif.svg
-[php-shield]: https://img.shields.io/badge/PHP-8.0%20|%208.1-blue
+[php-shield]: https://img.shields.io/badge/PHP-8.2%20|%208.3-blue
 [license-shield]: https://img.shields.io/github/license/LycheeOrg/Lychee.svg
+
+[build-shield]: https://github.com/LycheeOrg/php-exif/actions/workflows/php.yml/badge.svg
+[coverage-shield]: https://codecov.io/gh/LycheeOrg/php-exif/branch/master/graph/badge.svg
+[climate-shield]: https://api.codeclimate.com/v1/badges/f15042d535274f36c5a2/maintainability

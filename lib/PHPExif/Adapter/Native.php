@@ -1,17 +1,15 @@
 <?php
-/**
- * PHP Exif Native Reader Adapter
- *
- * @link        http://github.com/miljar/PHPExif for the canonical source repository
- * @copyright   Copyright (c) 2013 Tom Van Herreweghe <tom@theanalogguy.be>
- * @license     http://github.com/miljar/PHPExif/blob/master/LICENSE MIT License
- * @category    PHPExif
- * @package     Reader
- */
 
 namespace PHPExif\Adapter;
 
 use PHPExif\Exif;
+use PHPExif\Mapper\Native as MapperNative;
+use Safe\Exceptions\ImageException;
+
+use function Safe\mime_content_type;
+use function Safe\filesize;
+use function Safe\getimagesize;
+use function Safe\iptcparse;
 
 /**
  * PHP Exif Native Reader Adapter
@@ -21,22 +19,22 @@ use PHPExif\Exif;
  * @category    PHPExif
  * @package     Reader
  */
-class Native extends AdapterAbstract
+class Native extends AbstractAdapter
 {
-    const INCLUDE_THUMBNAIL = true;
-    const NO_THUMBNAIL      = false;
+    public const INCLUDE_THUMBNAIL = true;
+    public const NO_THUMBNAIL      = false;
 
-    const SECTIONS_AS_ARRAYS    = true;
-    const SECTIONS_FLAT         = false;
+    public const SECTIONS_AS_ARRAYS    = true;
+    public const SECTIONS_FLAT         = false;
 
-    const SECTION_FILE      = 'FILE';
-    const SECTION_COMPUTED  = 'COMPUTED';
-    const SECTION_IFD0      = 'IFD0';
-    const SECTION_THUMBNAIL = 'THUMBNAIL';
-    const SECTION_COMMENT   = 'COMMENT';
-    const SECTION_EXIF      = 'EXIF';
-    const SECTION_ALL       = 'ANY_TAG';
-    const SECTION_IPTC      = 'IPTC';
+    public const SECTION_FILE      = 'FILE';
+    public const SECTION_COMPUTED  = 'COMPUTED';
+    public const SECTION_IFD0      = 'IFD0';
+    public const SECTION_THUMBNAIL = 'THUMBNAIL';
+    public const SECTION_COMMENT   = 'COMMENT';
+    public const SECTION_EXIF      = 'EXIF';
+    public const SECTION_ALL       = 'ANY_TAG';
+    public const SECTION_IPTC      = 'IPTC';
 
     /**
      * List of EXIF sections
@@ -55,7 +53,7 @@ class Native extends AdapterAbstract
      */
     protected bool $sectionsAsArrays = self::SECTIONS_FLAT;
 
-    protected string $mapperClass = '\\PHPExif\\Mapper\\Native';
+    protected string $mapperClass = MapperNative::class;
 
     /**
      * Contains the mapping of names to IPTC field numbers
@@ -81,7 +79,7 @@ class Native extends AdapterAbstract
      *
      * @return array
      */
-    public function getRequiredSections() : array
+    public function getRequiredSections(): array
     {
         return $this->requiredSections;
     }
@@ -92,7 +90,7 @@ class Native extends AdapterAbstract
      * @param array $sections List of EXIF sections
      * @return \PHPExif\Adapter\Native Current instance for chaining
      */
-    public function setRequiredSections(array $sections) : Native
+    public function setRequiredSections(array $sections): Native
     {
         $this->requiredSections = $sections;
 
@@ -105,9 +103,9 @@ class Native extends AdapterAbstract
      * @param string $section
      * @return \PHPExif\Adapter\Native Current instance for chaining
      */
-    public function addRequiredSection(string $section) : Native
+    public function addRequiredSection(string $section): Native
     {
-        if (!in_array($section, $this->requiredSections)) {
+        if (!in_array($section, $this->requiredSections, true)) {
             array_push($this->requiredSections, $section);
         }
 
@@ -120,7 +118,7 @@ class Native extends AdapterAbstract
      * @param boolean $value
      * @return \PHPExif\Adapter\Native Current instance for chaining
      */
-    public function setIncludeThumbnail(bool $value) : Native
+    public function setIncludeThumbnail(bool $value): Native
     {
         $this->includeThumbnail = $value;
 
@@ -132,7 +130,7 @@ class Native extends AdapterAbstract
      *
      * @return boolean
      */
-    public function getIncludeThumbnail() : bool
+    public function getIncludeThumbnail(): bool
     {
         return $this->includeThumbnail;
     }
@@ -143,9 +141,9 @@ class Native extends AdapterAbstract
      * @param boolean $value
      * @return \PHPExif\Adapter\Native Current instance for chaining
      */
-    public function setSectionsAsArrays(bool $value) : Native
+    public function setSectionsAsArrays(bool $value): Native
     {
-        $this->sectionsAsArrays = (bool) $value;
+        $this->sectionsAsArrays = $value;
 
         return $this;
     }
@@ -155,7 +153,7 @@ class Native extends AdapterAbstract
      *
      * @return boolean
      */
-    public function getSectionsAsArrays() : bool
+    public function getSectionsAsArrays(): bool
     {
         return $this->sectionsAsArrays;
     }
@@ -166,7 +164,7 @@ class Native extends AdapterAbstract
      * @param string $file
      * @return \PHPExif\Exif Instance of Exif object with data
      */
-    public function getExifFromFile(string $file) : Exif
+    public function getExifFromFile(string $file): Exif
     {
         $mimeType = mime_content_type($file);
 
@@ -177,7 +175,7 @@ class Native extends AdapterAbstract
         }
 
         if ($mimeType === 'application/octet-stream' &&
-            in_array(strtolower(pathinfo($file, PATHINFO_EXTENSION)), ['mp4', 'mp4v', 'mpg4'])) {
+            in_array(strtolower(pathinfo($file, PATHINFO_EXTENSION)), ['mp4', 'mp4v', 'mpg4'], true)) {
             // @codeCoverageIgnoreStart
             $mimeType = 'video/mp4';
             // @codeCoverageIgnoreEnd
@@ -186,8 +184,13 @@ class Native extends AdapterAbstract
         // Photo
         $sections   = $this->getRequiredSections();
         $sections   = implode(',', $sections);
-        $sections   = (empty($sections)) ? null : $sections;
+        $sections   = $sections === '' ? null : $sections;
 
+        // exif_read_data raises E_WARNING/E_NOTICE errors for unsupported
+        // tags, which could result in exceptions being thrown, even though
+        // the function would otherwise succeed to return valid tags.
+        // We explicitly disable this undesirable behavior.
+        // @phpstan-ignore-next-line
         $data = @exif_read_data(
             $file,
             $sections,
@@ -207,16 +210,19 @@ class Native extends AdapterAbstract
         }
 
         if (!(array_key_exists('height', $data)) || !(array_key_exists('width', $data))) {
-            $img_size = getimagesize($file);
-            if ($img_size !== false) {
+            try {
+                $img_size = getimagesize($file);
                 if ($img_size[0] !== null && $img_size[1] !== null) {
                     $data['width'] = $img_size[0];
                     $data['height'] = $img_size[1];
                 }
+            } catch (ImageException) {
+                // Fail silently
             }
         }
-        
+
         // Force UTF8 encoding
+        /** @var array $data */
         $data = $this->convertToUTF8($data);
 
         // map the data:
@@ -239,12 +245,16 @@ class Native extends AdapterAbstract
      * @param string $file The file to read the IPTC data from
      * @return array
      */
-    public function getIptcData(string $file) : array
+    public function getIptcData(string $file): array
     {
         getimagesize($file, $info);
         $arrData = array();
         if (isset($info['APP13'])) {
-            $iptc = iptcparse($info['APP13']);
+            try {
+                $iptc = iptcparse($info['APP13']);
+            } catch (ImageException) {
+                return $arrData;
+            }
 
             foreach ($this->iptcMapping as $name => $field) {
                 if (!isset($iptc[$field])) {

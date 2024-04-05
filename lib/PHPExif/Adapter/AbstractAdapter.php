@@ -1,19 +1,12 @@
 <?php
-/**
- * PHP Exif Reader Adapter Abstract: Common functionality for adapters
- *
- * @link        http://github.com/miljar/PHPExif for the canonical source repository
- * @copyright   Copyright (c) 2013 Tom Van Herreweghe <tom@theanalogguy.be>
- * @license     http://github.com/miljar/PHPExif/blob/master/LICENSE MIT License
- * @category    PHPExif
- * @package     Reader
- */
 
 namespace PHPExif\Adapter;
 
-use PHPExif\Mapper\MapperInterface;
-use PHPExif\Hydrator\HydratorInterface;
 use ForceUTF8\Encoding;
+use PHPExif\Contracts\AdapterInterface;
+use PHPExif\Contracts\HydratorInterface;
+use PHPExif\Contracts\MapperInterface;
+use PHPExif\Hydrator\Mutator;
 
 /**
  * PHP Exif Reader Adapter Abstract
@@ -23,12 +16,14 @@ use ForceUTF8\Encoding;
  * @category    PHPExif
  * @package     Reader
  */
-abstract class AdapterAbstract implements AdapterInterface
+abstract class AbstractAdapter implements AdapterInterface
 {
-    protected string $hydratorClass = '\\PHPExif\\Hydrator\\Mutator';
+    /** @var class-string $hydratorClass */
+    protected string $hydratorClass = Mutator::class;
     protected ?MapperInterface $mapper = null;
     protected ?HydratorInterface $hydrator = null;
-    protected string $mapperClass = '';
+    /** @var class-string $mapperClass */
+    protected string $mapperClass;
 
     /**
      * Class constructor
@@ -37,7 +32,7 @@ abstract class AdapterAbstract implements AdapterInterface
      */
     public function __construct(array $options = array())
     {
-        if (!empty($options)) {
+        if (count($options) > 0) {
             $this->setOptions($options);
         }
     }
@@ -45,10 +40,10 @@ abstract class AdapterAbstract implements AdapterInterface
     /**
      * Mutator for the data mapper
      *
-     * @param \PHPExif\Mapper\MapperInterface $mapper
-     * @return \PHPExif\Adapter\AdapterInterface
+     * @param \PHPExif\Contracts\MapperInterface $mapper
+     * @return \PHPExif\Contracts\AdapterInterface
      */
-    public function setMapper(MapperInterface $mapper) : AdapterInterface
+    public function setMapper(MapperInterface $mapper): AdapterInterface
     {
         $this->mapper = $mapper;
 
@@ -58,13 +53,14 @@ abstract class AdapterAbstract implements AdapterInterface
     /**
      * Accessor for the data mapper
      *
-     * @return \PHPExif\Mapper\MapperInterface
+     * @return \PHPExif\Contracts\MapperInterface
      */
-    public function getMapper() : MapperInterface
+    public function getMapper(): MapperInterface
     {
         if (null === $this->mapper) {
             // lazy load one
-            $mapper = new $this->mapperClass;
+            /** @var MapperInterface */
+            $mapper = new $this->mapperClass();
 
             $this->setMapper($mapper);
         }
@@ -75,10 +71,10 @@ abstract class AdapterAbstract implements AdapterInterface
     /**
      * Mutator for the hydrator
      *
-     * @param \PHPExif\Hydrator\HydratorInterface $hydrator
-     * @return \PHPExif\Adapter\AdapterInterface
+     * @param \PHPExif\Contracts\HydratorInterface $hydrator
+     * @return \PHPExif\Contracts\AdapterInterface
      */
-    public function setHydrator(HydratorInterface $hydrator) : AdapterInterface
+    public function setHydrator(HydratorInterface $hydrator): AdapterInterface
     {
         $this->hydrator = $hydrator;
 
@@ -88,13 +84,14 @@ abstract class AdapterAbstract implements AdapterInterface
     /**
      * Accessor for the data hydrator
      *
-     * @return \PHPExif\Hydrator\HydratorInterface
+     * @return \PHPExif\Contracts\HydratorInterface
      */
-    public function getHydrator() : HydratorInterface
+    public function getHydrator(): HydratorInterface
     {
         if (null === $this->hydrator) {
             // lazy load one
-            $hydrator = new $this->hydratorClass;
+            /** @var HydratorInterface */
+            $hydrator = new $this->hydratorClass();
 
             $this->setHydrator($hydrator);
         }
@@ -106,9 +103,9 @@ abstract class AdapterAbstract implements AdapterInterface
      * Set array of options in the current object
      *
      * @param array $options
-     * @return \PHPExif\Reader\AdapterAbstract
+     * @return \PHPExif\Contracts\AdapterInterface
      */
-    public function setOptions(array $options) : AdapterInterface
+    public function setOptions(array $options): AdapterInterface
     {
         $hydrator = $this->getHydrator();
         $hydrator->hydrate($this, $options);
@@ -119,16 +116,20 @@ abstract class AdapterAbstract implements AdapterInterface
     /**
      * Encodes an array of strings into UTF8
      *
-     * @param array|string $data
-     * @return array|string|null
+     * @template T of array|string
+     * @param T $data
+     * @return (T is string ? string : array)
      */
     // @codeCoverageIgnoreStart
     // this is fine because we use it directly in our tests for Exiftool and Native
-    public function convertToUTF8($data) : array|string|null
+    public function convertToUTF8(array|string $data): array|string
     {
         if (is_array($data)) {
+            /** @var array|string|null $v */
             foreach ($data as $k => $v) {
-                $data[$k] = $this->convertToUTF8($v);
+                if ($v !== null) {
+                    $data[$k] = $this->convertToUTF8($v);
+                }
             }
         } else {
             $data = Encoding::toUTF8($data);

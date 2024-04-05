@@ -1,64 +1,60 @@
 <?php
-/**
- * @covers \PHPExif\Adapter\Native::<!public>
- */
+
+use PHPExif\Adapter\Native;
+
 class NativeTest extends \PHPUnit\Framework\TestCase
 {
     /**
-     * @var \PHPExif\Adapter\Native
+     * @var Native
      */
-    protected $adapter;
+    protected Native $adapter;
 
     public function setUp(): void
     {
-        $this->adapter = new \PHPExif\Adapter\Native();
+        $this->adapter = new Native();
     }
 
     /**
      * @group native
-     * @covers \PHPExif\Adapter\Native::setIncludeThumbnail
      */
     public function testSetIncludeThumbnailInProperty()
     {
-        $reflProperty = new \ReflectionProperty('\PHPExif\Adapter\Native', 'includeThumbnail');
+        $reflProperty = new \ReflectionProperty(Native::class, 'includeThumbnail');
         $reflProperty->setAccessible(true);
 
-        $this->assertEquals(\PHPExif\Adapter\Native::NO_THUMBNAIL, $reflProperty->getValue($this->adapter));
+        $this->assertEquals(Native::NO_THUMBNAIL, $reflProperty->getValue($this->adapter));
 
-        $this->adapter->setIncludeThumbnail(\PHPExif\Adapter\Native::INCLUDE_THUMBNAIL);
+        $this->adapter->setIncludeThumbnail(Native::INCLUDE_THUMBNAIL);
 
-        $this->assertEquals(\PHPExif\Adapter\Native::INCLUDE_THUMBNAIL, $reflProperty->getValue($this->adapter));
+        $this->assertEquals(Native::INCLUDE_THUMBNAIL, $reflProperty->getValue($this->adapter));
     }
 
     /**
      * @group native
-     * @covers \PHPExif\Adapter\Native::getIncludeThumbnail
      */
     public function testGetIncludeThumbnailFromProperty()
     {
-        $reflProperty = new \ReflectionProperty('\PHPExif\Adapter\Native', 'includeThumbnail');
+        $reflProperty = new \ReflectionProperty(Native::class, 'includeThumbnail');
         $reflProperty->setAccessible(true);
-        $reflProperty->setValue($this->adapter, \PHPExif\Adapter\Native::INCLUDE_THUMBNAIL);
+        $reflProperty->setValue($this->adapter, Native::INCLUDE_THUMBNAIL);
 
-        $this->assertEquals(\PHPExif\Adapter\Native::INCLUDE_THUMBNAIL, $this->adapter->getIncludeThumbnail());
+        $this->assertEquals(Native::INCLUDE_THUMBNAIL, $this->adapter->getIncludeThumbnail());
     }
 
     /**
      * @group native
-     * @covers \PHPExif\Adapter\Native::GetIncludeThumbnail
      */
     public function testGetIncludeThumbnailHasDefaultValue()
     {
-        $this->assertEquals(\PHPExif\Adapter\Native::NO_THUMBNAIL, $this->adapter->getIncludeThumbnail());
+        $this->assertEquals(Native::NO_THUMBNAIL, $this->adapter->getIncludeThumbnail());
     }
 
     /**
      * @group native
-     * @covers \PHPExif\Adapter\Native::getRequiredSections
      */
     public function testGetRequiredSections()
     {
-        $reflProperty = new \ReflectionProperty('\PHPExif\Adapter\Native', 'requiredSections');
+        $reflProperty = new \ReflectionProperty(Native::class, 'requiredSections');
         $reflProperty->setAccessible(true);
 
         $this->assertEquals($reflProperty->getValue($this->adapter), $this->adapter->getRequiredSections());
@@ -66,11 +62,10 @@ class NativeTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @group native
-     * @covers \PHPExif\Adapter\Native::setRequiredSections
      */
     public function testSetRequiredSections()
     {
-        $reflProperty = new \ReflectionProperty('\PHPExif\Adapter\Native', 'requiredSections');
+        $reflProperty = new \ReflectionProperty(Native::class, 'requiredSections');
         $reflProperty->setAccessible(true);
 
         $testData = array('foo', 'bar', 'baz');
@@ -83,11 +78,10 @@ class NativeTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @group native
-     * @covers \PHPExif\Adapter\Native::addRequiredSection
      */
     public function testAddRequiredSection()
     {
-        $reflProperty = new \ReflectionProperty('\PHPExif\Adapter\Native', 'requiredSections');
+        $reflProperty = new \ReflectionProperty(Native::class, 'requiredSections');
         $reflProperty->setAccessible(true);
 
         $testData = array('foo', 'bar', 'baz');
@@ -102,7 +96,6 @@ class NativeTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @group native
-     * @covers \PHPExif\Adapter\Native::getExifFromFile
      */
     public function testGetExifFromFileNoData()
     {
@@ -116,7 +109,6 @@ class NativeTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @group native
-     * @covers \PHPExif\Adapter\Native::getExifFromFile
      */
     public function testGetExifFromFileHasData()
     {
@@ -129,7 +121,6 @@ class NativeTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @group native
-     * @covers \PHPExif\Adapter\Native::getIptcData
      */
     public function testGetIptcData()
     {
@@ -147,13 +138,23 @@ class NativeTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @group native
-     * @covers \PHPExif\Adapter\Native::setSectionsAsArrays
+     */
+    public function testGetEmptyIptcData()
+    {
+        $file = PHPEXIF_TEST_ROOT . '/files/empty_iptc.jpg';
+        $result = $this->adapter->getIptcData($file);
+
+        $this->assertEquals([], $result);
+    }
+
+    /**
+     * @group native
      */
     public function testSetSectionsAsArrayInProperty()
     {
-        $reflProperty = new \ReflectionProperty('\PHPExif\Adapter\Native', 'sectionsAsArrays');
+        $reflProperty = new \ReflectionProperty(Native::class, 'sectionsAsArrays');
         $reflProperty->setAccessible(true);
-        $expected = \PHPExif\Adapter\Native::SECTIONS_AS_ARRAYS;
+        $expected = Native::SECTIONS_AS_ARRAYS;
         $this->adapter->setSectionsAsArrays($expected);
         $actual = $reflProperty->getValue($this->adapter);
         $this->assertEquals($expected, $actual);
@@ -161,13 +162,12 @@ class NativeTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @group native
-     * @covers \PHPExif\Adapter\Native::setSectionsAsArrays
      */
     public function testSetSectionsAsArrayConvertsToBoolean()
     {
-        $reflProperty = new \ReflectionProperty('\PHPExif\Adapter\Native', 'sectionsAsArrays');
+        $reflProperty = new \ReflectionProperty(Native::class, 'sectionsAsArrays');
         $reflProperty->setAccessible(true);
-        $expected = \PHPExif\Adapter\Native::SECTIONS_AS_ARRAYS;
+        $expected = Native::SECTIONS_AS_ARRAYS;
         $this->adapter->setSectionsAsArrays('Foo');
         $actual = $reflProperty->getValue($this->adapter);
         $this->assertEquals($expected, $actual);
@@ -175,14 +175,13 @@ class NativeTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @group native
-     * @covers \PHPExif\Adapter\Native::getSectionsAsArrays
      */
     public function testGetSectionsAsArrayFromProperty()
     {
-        $reflProperty = new \ReflectionProperty('\PHPExif\Adapter\Native', 'sectionsAsArrays');
+        $reflProperty = new \ReflectionProperty(Native::class, 'sectionsAsArrays');
         $reflProperty->setAccessible(true);
-        $reflProperty->setValue($this->adapter, \PHPExif\Adapter\Native::SECTIONS_AS_ARRAYS);
+        $reflProperty->setValue($this->adapter, Native::SECTIONS_AS_ARRAYS);
 
-        $this->assertEquals(\PHPExif\Adapter\Native::SECTIONS_AS_ARRAYS, $this->adapter->getSectionsAsArrays());
+        $this->assertEquals(Native::SECTIONS_AS_ARRAYS, $this->adapter->getSectionsAsArrays());
     }
 }

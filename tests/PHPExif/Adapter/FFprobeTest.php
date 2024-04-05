@@ -1,27 +1,28 @@
 <?php
-/**
- * @covers \PHPExif\Adapter\Native::<!public>
- */
+
+use PHPExif\Adapter\FFprobe;
+use PHPExif\Exif;
+use PHPExif\Reader\PhpExifReaderException;
+
 class FFprobeTest extends \PHPUnit\Framework\TestCase
 {
     /**
-     * @var \PHPExif\Adapter\FFprobe
+     * @var FFprobe
      */
-    protected $adapter;
+    protected FFprobe $adapter;
 
     public function setUp(): void
     {
-        $this->adapter = new \PHPExif\Adapter\FFprobe();
+        $this->adapter = new FFprobe();
     }
 
 
     /**
      * @group ffprobe
-     * @covers \PHPExif\Adapter\FFprobe::getToolPath
      */
     public function testGetToolPathFromProperty()
     {
-        $reflProperty = new \ReflectionProperty('\PHPExif\Adapter\FFprobe', 'toolPath');
+        $reflProperty = new \ReflectionProperty(FFprobe::class, 'toolPath');
         $reflProperty->setAccessible(true);
         $expected = '/foo/bar/baz';
         $reflProperty->setValue($this->adapter, $expected);
@@ -31,11 +32,10 @@ class FFprobeTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @group ffprobe
-     * @covers \PHPExif\Adapter\FFprobe::setToolPath
      */
     public function testSetToolPathInProperty()
     {
-        $reflProperty = new \ReflectionProperty('\PHPExif\Adapter\FFprobe', 'toolPath');
+        $reflProperty = new \ReflectionProperty(FFprobe::class, 'toolPath');
         $reflProperty->setAccessible(true);
 
         $expected = '/tmp';
@@ -46,7 +46,6 @@ class FFprobeTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @group ffprobe
-     * @covers \PHPExif\Adapter\FFprobe::setToolPath
      */
     public function testSetToolPathThrowsException()
     {
@@ -56,7 +55,6 @@ class FFprobeTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @group ffprobe
-     * @covers \PHPExif\Adapter\FFprobe::getToolPath
      */
     public function testGetToolPathLazyLoadsPath()
     {
@@ -65,34 +63,30 @@ class FFprobeTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @group ffprobe
-     * @covers \PHPExif\Adapter\FFprobe::getExifFromFile
      */
     public function testGetExifFromFileHasData()
     {
         $file = PHPEXIF_TEST_ROOT . '/files/IMG_3824.MOV';
         $result = $this->adapter->getExifFromFile($file);
-        $this->assertInstanceOf('\PHPExif\Exif', $result);
+        $this->assertInstanceOf(Exif::class, $result);
         $this->assertIsArray($result->getRawData());
         $this->assertNotEmpty($result->getRawData());
 
         $file = PHPEXIF_TEST_ROOT . '/files/IMG_3825.MOV';
         $result = $this->adapter->getExifFromFile($file);
-        $this->assertInstanceOf('\PHPExif\Exif', $result);
+        $this->assertInstanceOf(Exif::class, $result);
         $this->assertIsArray($result->getRawData());
         $this->assertNotEmpty($result->getRawData());
     }
 
     /**
      * @group ffprobe
-     * @covers \PHPExif\Adapter\FFprobe::getExifFromFile
      */
     public function testErrorImageUsed()
     {
-        $file = PHPEXIF_TEST_ROOT . '/files/morning_glory_pool_500.jpg';;
-        $result = $this->adapter->getExifFromFile($file);
-        $this->assertIsBool($result);
-        $this->assertEquals(false, $result);
+        $file = PHPEXIF_TEST_ROOT . '/files/morning_glory_pool_500.jpg';
+        $this->expectException(PhpExifReaderException::class);
+        $this->adapter->getExifFromFile($file);
     }
-
 
 }

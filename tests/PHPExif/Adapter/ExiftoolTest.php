@@ -2,25 +2,21 @@
 
 use PHPExif\Adapter\Exiftool;
 
-/**
- * @covers \PHPExif\Adapter\Exiftool::<!public>
- */
 class ExiftoolTest extends \PHPUnit\Framework\TestCase
 {
     protected Exiftool $adapter;
 
     public function setUp(): void
     {
-        $this->adapter = new \PHPExif\Adapter\Exiftool();
+        $this->adapter = new Exiftool();
     }
 
     /**
      * @group exiftool
-     * @covers \PHPExif\Adapter\Exiftool::getToolPath
      */
     public function testGetToolPathFromProperty()
     {
-        $reflProperty = new \ReflectionProperty('\PHPExif\Adapter\Exiftool', 'toolPath');
+        $reflProperty = new \ReflectionProperty(Exiftool::class, 'toolPath');
         $reflProperty->setAccessible(true);
         $expected = '/foo/bar/baz';
         $reflProperty->setValue($this->adapter, $expected);
@@ -30,11 +26,10 @@ class ExiftoolTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @group exiftool
-     * @covers \PHPExif\Adapter\Exiftool::setToolPath
      */
     public function testSetToolPathInProperty()
     {
-        $reflProperty = new \ReflectionProperty('\PHPExif\Adapter\Exiftool', 'toolPath');
+        $reflProperty = new \ReflectionProperty(Exiftool::class, 'toolPath');
         $reflProperty->setAccessible(true);
 
         $expected = '/tmp';
@@ -45,7 +40,6 @@ class ExiftoolTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @group exiftool
-     * @covers \PHPExif\Adapter\Exiftool::setToolPath
      */
     public function testSetToolPathThrowsException()
     {
@@ -56,7 +50,6 @@ class ExiftoolTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @group exiftool
-     * @covers \PHPExif\Adapter\Exiftool::getToolPath
      */
     public function testGetToolPathLazyLoadsPath()
     {
@@ -65,11 +58,10 @@ class ExiftoolTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @group exiftool
-     * @covers \PHPExif\Adapter\Exiftool::setNumeric
      */
     public function testSetNumericInProperty()
     {
-        $reflProperty = new \ReflectionProperty('\PHPExif\Adapter\Exiftool', 'numeric');
+        $reflProperty = new \ReflectionProperty(Exiftool::class, 'numeric');
         $reflProperty->setAccessible(true);
 
         $expected = true;
@@ -81,11 +73,10 @@ class ExiftoolTest extends \PHPUnit\Framework\TestCase
     /**
      * @see URI http://www.sno.phy.queensu.ca/~phil/exiftool/faq.html#Q10
      * @group exiftool
-     * @covers \PHPExif\Adapter\Exiftool::setEncoding
      */
     public function testSetEncodingInProperty()
     {
-        $reflProperty = new \ReflectionProperty('\PHPExif\Adapter\Exiftool', 'encoding');
+        $reflProperty = new \ReflectionProperty(Exiftool::class, 'encoding');
         $reflProperty->setAccessible(true);
 
         $expected = array('iptc' => 'cp1250');
@@ -97,7 +88,6 @@ class ExiftoolTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @group exiftool
-     * @covers \PHPExif\Adapter\Exiftool::getExifFromFile
      */
     public function testGetExifFromFile()
     {
@@ -111,7 +101,6 @@ class ExiftoolTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @group exiftool
-     * @covers \PHPExif\Adapter\Exiftool::getExifFromFile
      */
     public function testGetExifFromFileWithUtf8()
     {
@@ -125,11 +114,10 @@ class ExiftoolTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @group exiftool
-     * @covers \PHPExif\Adapter\Exiftool::getCliOutput
      */
     public function testGetCliOutput()
     {
-        $reflMethod = new \ReflectionMethod('\PHPExif\Adapter\Exiftool', 'getCliOutput');
+        $reflMethod = new \ReflectionMethod(Exiftool::class, 'getCliOutput');
         $reflMethod->setAccessible(true);
 
         $result = $reflMethod->invoke(

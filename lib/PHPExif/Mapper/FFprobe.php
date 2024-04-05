@@ -1,19 +1,11 @@
 <?php
-/**
- * PHP Exif Native Mapper
- *
- * @link        http://github.com/miljar/PHPExif for the canonical source repository
- * @copyright   Copyright (c) 2015 Tom Van Herreweghe <tom@theanalogguy.be>
- * @license     http://github.com/miljar/PHPExif/blob/master/LICENSE MIT License
- * @category    PHPExif
- * @package     Mapper
- */
 
 namespace PHPExif\Mapper;
 
 use PHPExif\Exif;
-use DateTime;
-use Exception;
+use Safe\DateTime;
+
+use function Safe\preg_match;
 
 /**
  * PHP Exif Native Mapper
@@ -23,29 +15,29 @@ use Exception;
  * @category    PHPExif
  * @package     Mapper
  */
-class FFprobe implements MapperInterface
+class FFprobe extends AbstractMapper
 {
-    const HEIGHT           = 'height';
-    const WIDTH            = 'width';
-    const FILESIZE         = 'size';
-    const FILENAME         = 'filename';
-    const FRAMERATE        = 'avg_frame_rate';
-    const DURATION         = 'duration';
-    const DATETIMEORIGINAL = 'creation_time';
-    const GPSLATITUDE      = 'location';
-    const GPSLONGITUDE     = 'location';
-    const MIMETYPE         = 'MimeType';
+    public const HEIGHT           = 'height';
+    public const WIDTH            = 'width';
+    public const FILESIZE         = 'size';
+    public const FILENAME         = 'filename';
+    public const FRAMERATE        = 'avg_frame_rate';
+    public const DURATION         = 'duration';
+    public const DATETIMEORIGINAL = 'creation_time';
+    public const GPSLATITUDE      = 'location';
+    public const GPSLONGITUDE     = 'location';
+    public const MIMETYPE         = 'MimeType';
 
-    const QUICKTIME_GPSLATITUDE       = 'com.apple.quicktime.location.ISO6709';
-    const QUICKTIME_GPSLONGITUDE      = 'com.apple.quicktime.location.ISO6709';
-    const QUICKTIME_GPSALTITUDE       = 'com.apple.quicktime.location.ISO6709';
-    const QUICKTIME_DATE              = 'com.apple.quicktime.creationdate';
-    const QUICKTIME_DESCRIPTION       = 'com.apple.quicktime.description';
-    const QUICKTIME_TITLE             = 'com.apple.quicktime.title';
-    const QUICKTIME_KEYWORDS          = 'com.apple.quicktime.keywords';
-    const QUICKTIME_MAKE              = 'com.apple.quicktime.make';
-    const QUICKTIME_MODEL             = 'com.apple.quicktime.model';
-    const QUICKTIME_CONTENTIDENTIFIER = 'com.apple.quicktime.content.identifier';
+    public const QUICKTIME_GPSLATITUDE       = 'com.apple.quicktime.location.ISO6709';
+    public const QUICKTIME_GPSLONGITUDE      = 'com.apple.quicktime.location.ISO6709';
+    public const QUICKTIME_GPSALTITUDE       = 'com.apple.quicktime.location.ISO6709';
+    public const QUICKTIME_DATE              = 'com.apple.quicktime.creationdate';
+    public const QUICKTIME_DESCRIPTION       = 'com.apple.quicktime.description';
+    public const QUICKTIME_TITLE             = 'com.apple.quicktime.title';
+    public const QUICKTIME_KEYWORDS          = 'com.apple.quicktime.keywords';
+    public const QUICKTIME_MAKE              = 'com.apple.quicktime.make';
+    public const QUICKTIME_MODEL             = 'com.apple.quicktime.model';
+    public const QUICKTIME_CONTENTIDENTIFIER = 'com.apple.quicktime.content.identifier';
 
 
     /**
@@ -78,7 +70,7 @@ class FFprobe implements MapperInterface
         self::QUICKTIME_CONTENTIDENTIFIER => Exif::CONTENTIDENTIFIER,
     );
 
-    const SECTION_TAGS      = 'tags';
+    public const SECTION_TAGS      = 'tags';
 
     /**
      * A list of section names
@@ -96,7 +88,7 @@ class FFprobe implements MapperInterface
      * @param array $data
      * @return array
      */
-    public function mapRawData(array $data) : array
+    public function mapRawData(array $data): array
     {
         $mappedData = array();
 
@@ -113,6 +105,7 @@ class FFprobe implements MapperInterface
             }
 
             $key = $this->map[$field];
+            $value = $this->trim($value);
 
             // manipulate the value if necessary
             switch ($field) {
@@ -147,14 +140,17 @@ class FFprobe implements MapperInterface
                     break;
                 case self::FRAMERATE:
                     $value = $this->normalizeComponent($value);
+                    if ($value === false) {
+                        continue 2;
+                    }
                     break;
                 case self::GPSLATITUDE:
                 case self::GPSLONGITUDE:
                     $matches = [];
                     preg_match('/^([+-][0-9\.]+)([+-][0-9\.]+)\/$/', $value, $matches);
-                    if (count($matches) == 3 &&
-                        !preg_match('/^\+0+\.0+$/', $matches[1]) &&
-                        !preg_match('/^\+0+\.0+$/', $matches[2])) {
+                    if (count($matches) === 3 &&
+                        preg_match('/^\+0+\.0+$/', $matches[1]) === 0 &&
+                        preg_match('/^\+0+\.0+$/', $matches[2]) === 0) {
                         $mappedData[Exif::LATITUDE] = $matches[1];
                         $mappedData[Exif::LONGITUDE] = $matches[2];
                     }
@@ -166,7 +162,13 @@ class FFprobe implements MapperInterface
                     $mappedData[Exif::LATITUDE]  = $location_data['latitude'];
                     $mappedData[Exif::LONGITUDE] = $location_data['longitude'];
                     $mappedData[Exif::ALTITUDE]  = $location_data['altitude'];
-                    //$value = $this->normalizeComponent($value);
+                    continue 2;
+                case self::QUICKTIME_KEYWORDS:
+                    if (is_string($value)) {
+                        $mappedData[Exif::KEYWORDS] = explode(",", $value);
+                    } else {
+                        $mappedData[Exif::KEYWORDS] = $value;
+                    }
                     continue 2;
             }
 
@@ -176,9 +178,11 @@ class FFprobe implements MapperInterface
 
         // add GPS coordinates, if available
         if ((isset($mappedData[Exif::LATITUDE])) && (isset($mappedData[Exif::LONGITUDE]))) {
-            $mappedData[Exif::GPS] = sprintf('%s,%s', $mappedData[Exif::LATITUDE], $mappedData[Exif::LONGITUDE]);
-        } else {
-            unset($mappedData[Exif::GPS]);
+            $mappedData[Exif::GPS] = sprintf(
+                '%s,%s',
+                (string) $mappedData[Exif::LATITUDE],
+                (string) $mappedData[Exif::LONGITUDE]
+            );
         }
 
         // Swap width and height if needed
@@ -198,9 +202,9 @@ class FFprobe implements MapperInterface
      * @param string $field
      * @return bool
      */
-    protected function isSection(string $field) : bool
+    protected function isSection(string $field): bool
     {
-        return (in_array($field, $this->sections));
+        return (in_array($field, $this->sections, true));
     }
 
     /**
@@ -211,7 +215,7 @@ class FFprobe implements MapperInterface
      * @param  string  &$field
      * @return bool
      */
-    protected function isFieldKnown(string &$field) : bool
+    protected function isFieldKnown(string &$field): bool
     {
         $lcfField = lcfirst($field);
         if (array_key_exists($lcfField, $this->map)) {
@@ -233,19 +237,19 @@ class FFprobe implements MapperInterface
     /**
      * Normalize component
      *
-     * @param string $component
-     * @return float
+     * @param string $rational
+     * @return float|false
      */
-    protected function normalizeComponent(string $rational) : float
+    protected function normalizeComponent(string $rational): float|false
     {
         $parts = explode('/', $rational, 2);
-        if (count($parts) == 1) {
+        if (count($parts) === 1) {
             return (float) $parts[0];
         }
         // case part[1] is 0, div by 0 is forbidden.
         // Catch case of one entry not being numeric
-        if ($parts[1] == 0 || !is_numeric($parts[0]) || !is_numeric($parts[1])) {
-            return (float) 0;
+        if ($parts[1] === '0' || !is_numeric($parts[0]) || !is_numeric($parts[1])) {
+            return false;
         }
         return (float) $parts[0] / $parts[1];
     }
@@ -257,11 +261,11 @@ class FFprobe implements MapperInterface
      * to decimal format for latitude and longitude
      * See https://github.com/seanson/python-iso6709.git.
      *
-     * @param string sign
-     * @param string degrees
-     * @param string minutes
-     * @param string seconds
-     * @param string fraction
+     * @param string $sign
+     * @param string $degrees
+     * @param string $minutes
+     * @param string $seconds
+     * @param string $fraction
      *
      * @return float
      */
@@ -271,7 +275,7 @@ class FFprobe implements MapperInterface
         string $minutes,
         string $seconds,
         string $fraction
-    ) : float {
+    ): float {
         if ($fraction !== '') {
             if ($seconds !== '') {
                 $seconds = $seconds . $fraction;
@@ -282,10 +286,10 @@ class FFprobe implements MapperInterface
             }
         }
         $decimal = floatval($degrees) + floatval($minutes) / 60.0 + floatval($seconds) / 3600.0;
-        if ($sign == '-') {
+        if ($sign === '-') {
             $decimal = -1.0 * $decimal;
         }
-        return $decimal;
+        return round($decimal, self::ROUNDING_PRECISION);
     }
 
     /**
@@ -293,11 +297,11 @@ class FFprobe implements MapperInterface
      * of a GPS coordiante formattet with ISO6709
      * See https://github.com/seanson/python-iso6709.git.
      *
-     * @param string val_ISO6709
+     * @param string $val_ISO6709
      *
      * @return array
      */
-    public function readISO6709(string $val_ISO6709) : array
+    public function readISO6709(string $val_ISO6709): array
     {
         $return = [
             'latitude' => null,

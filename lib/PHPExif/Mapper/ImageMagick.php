@@ -1,17 +1,13 @@
 <?php
-/**
- * PHP Imagick Exiftool Mapper
- *
- * @link        http://github.com/miljar/PHPExif for the canonical source repository
- * @copyright   Copyright (c) 2015 Tom Van Herreweghe <tom@theanalogguy.be>
- * @license     http://github.com/miljar/PHPExif/blob/master/LICENSE MIT License
- * @category    PHPExif
- * @package     Mapper
- */
 
 namespace PHPExif\Mapper;
 
 use PHPExif\Exif;
+use Safe\DateTime;
+
+use function Safe\preg_match;
+use function Safe\preg_replace;
+use function Safe\preg_split;
 
 /**
  * PHP Exif Imagick Mapper
@@ -21,34 +17,50 @@ use PHPExif\Exif;
  * @category    PHPExif
  * @package     Mapper
  */
-class ImageMagick implements MapperInterface
+class ImageMagick extends AbstractMapper
 {
-    const APERTURE                 = 'exif:FNumber';
-    const COLORSPACE               = 'exif:ColorSpace';
-    const CREATION_DATE            = 'date:create';
-    const DATETIMEORIGINAL         = 'exif:DateTimeOriginal';
-    const DESCRIPTION              = 'exif:ImageDescription ';
-    const EXPOSURETIME             = 'exif:ExposureTime';
-    const FILESIZE                 = 'filesize';
-    const FILENAME                 = 'filename';
-    const FOCALLENGTH              = 'exif:FocalLength';
-    const GPSLATITUDE              = 'exif:GPSLatitude';
-    const GPSLONGITUDE             = 'exif:GPSLongitude';
-    const GPSALTITUDE              = 'exif:GPSAltitude';
-    const IMAGEHEIGHT              = 'exif:PixelYDimension';
-    const IMAGEHEIGHT_PNG          = 'png:IHDR.width,height';
-    const IMAGEWIDTH               = 'exif:PixelXDimension';
-    const IMAGEWIDTH_PNG           = 'png:IHDR.width,height';
-    const IMGDIRECTION             = 'exif:GPSImgDirection';
-    const ISO                      = 'exif:PhotographicSensitivity';
-    const LENS                     = 'exif:LensModel';
-    const MAKE                     = 'exif:Make';
-    const MIMETYPE                 = 'MimeType';
-    const MODEL                    = 'exif:Model';
-    const ORIENTATION              = 'exif:Orientation';
-    const SOFTWARE                 = 'exif:Software';
-    const XRESOLUTION              = 'exif:XResolution';
-    const YRESOLUTION              = 'exif:YResolution';
+    public const APERTURE                 = 'exif:FNumber';
+    public const ARTIST                   = 'exif:Artist';
+    public const COLORSPACE               = 'exif:ColorSpace';
+    public const COPYRIGHT                = 'exif:Copyright';
+    public const DATETIMEORIGINAL         = 'exif:DateTimeOriginal';
+    public const DESCRIPTION              = 'exif:ImageDescription';
+    public const EXPOSURETIME             = 'exif:ExposureTime';
+    public const FILESIZE                 = 'filesize';
+    public const FILENAME                 = 'filename';
+    public const FOCALLENGTH              = 'exif:FocalLength';
+    public const GPSLATITUDE              = 'exif:GPSLatitude';
+    public const GPSLONGITUDE             = 'exif:GPSLongitude';
+    public const GPSALTITUDE              = 'exif:GPSAltitude';
+    public const IMAGEHEIGHT              = 'exif:PixelYDimension';
+    public const IMAGEHEIGHT_PNG          = 'png:IHDR.width,height';
+    public const HEIGHT                   = 'height';
+    public const IMAGEWIDTH               = 'exif:PixelXDimension';
+    public const IMAGEWIDTH_PNG           = 'png:IHDR.width,height';
+    public const WIDTH                    = 'width';
+    public const IMGDIRECTION             = 'exif:GPSImgDirection';
+    public const ISO                      = 'exif:PhotographicSensitivity';
+    public const LENS                     = 'exif:LensModel';
+    public const MAKE                     = 'exif:Make';
+    public const MIMETYPE                 = 'MimeType';
+    public const MODEL                    = 'exif:Model';
+    public const ORIENTATION              = 'exif:Orientation';
+    public const SOFTWARE                 = 'exif:Software';
+    public const XRESOLUTION              = 'exif:XResolution';
+    public const YRESOLUTION              = 'exif:YResolution';
+    public const TITLE                    = 'iptc:title';
+    public const KEYWORDS                 = 'iptc:keywords';
+    public const COPYRIGHT_IPTC           = 'iptc:copyright';
+    public const CAPTION                  = 'iptc:caption';
+    public const HEADLINE                 = 'iptc:headline';
+    public const CREDIT                   = 'iptc:credit';
+    public const SOURCE                   = 'iptc:source';
+    public const JOBTITLE                 = 'iptc:jobtitle';
+    public const CITY                     = 'iptc:city';
+    public const SUBLOCATION              = 'iptc:sublocation';
+    public const STATE                    = 'iptc:state';
+    public const COUNTRY                  = 'iptc:country';
+
 
     /**
      * Maps the ExifTool fields to the fields of
@@ -58,8 +70,9 @@ class ImageMagick implements MapperInterface
      */
     protected array $map = array(
         self::APERTURE                 => Exif::APERTURE,
+        self::ARTIST                   => Exif::AUTHOR,
         self::COLORSPACE               => Exif::COLORSPACE,
-        self::CREATION_DATE            => Exif::CREATION_DATE,
+        self::COPYRIGHT                => Exif::COPYRIGHT,
         self::DATETIMEORIGINAL         => Exif::CREATION_DATE,
         self::DESCRIPTION              => Exif::DESCRIPTION,
         self::EXPOSURETIME             => Exif::EXPOSURE,
@@ -72,8 +85,10 @@ class ImageMagick implements MapperInterface
         self::IMGDIRECTION             => Exif::IMGDIRECTION,
         self::IMAGEHEIGHT              => Exif::HEIGHT,
         self::IMAGEHEIGHT_PNG          => Exif::HEIGHT,
+        self::HEIGHT                   => Exif::HEIGHT,
         self::IMAGEWIDTH               => Exif::WIDTH,
         self::IMAGEWIDTH_PNG           => Exif::WIDTH,
+        self::WIDTH                    => Exif::WIDTH,
         self::ISO                      => Exif::ISO,
         self::LENS                     => Exif::LENS,
         self::MAKE                     => Exif::MAKE,
@@ -81,8 +96,20 @@ class ImageMagick implements MapperInterface
         self::MODEL                    => Exif::CAMERA,
         self::ORIENTATION              => Exif::ORIENTATION,
         self::SOFTWARE                 => Exif::SOFTWARE,
+        self::XRESOLUTION              => Exif::HORIZONTAL_RESOLUTION,
         self::YRESOLUTION              => Exif::VERTICAL_RESOLUTION,
-
+        self::TITLE                    => Exif::TITLE,
+        self::KEYWORDS                 => Exif::KEYWORDS,
+        self::COPYRIGHT_IPTC           => Exif::COPYRIGHT,
+        self::CAPTION                  => Exif::CAPTION,
+        self::HEADLINE                 => Exif::HEADLINE,
+        self::CREDIT                   => Exif::CREDIT,
+        self::SOURCE                   => Exif::SOURCE,
+        self::JOBTITLE                 => EXIF::JOB_TITLE,
+        self::CITY                     => Exif::CITY,
+        self::SUBLOCATION              => Exif::SUBLOCATION,
+        self::STATE                    => Exif::STATE,
+        self::COUNTRY                  => Exif::COUNTRY
 
     );
 
@@ -94,7 +121,7 @@ class ImageMagick implements MapperInterface
      * @param array $data
      * @return array
      */
-    public function mapRawData(array $data) : array
+    public function mapRawData(array $data): array
     {
         $mappedData = array();
 
@@ -105,23 +132,16 @@ class ImageMagick implements MapperInterface
             }
 
             $key = $this->map[$field];
+            $value = $this->trim($value);
 
             // manipulate the value if necessary
             switch ($field) {
                 case self::APERTURE:
-                    $value = sprintf('f/%01.1f', $this->normalizeComponent($value));
-                    break;
-                case self::CREATION_DATE:
-                    if (!isset($mappedData[Exif::CREATION_DATE])
-                            && preg_match('/^0000[-:]00[-:]00.00:00:00/', $value) === 0) {
-                        try {
-                            $value = new \DateTime($value);
-                        } catch (\Exception $e) {
-                            continue 2;
-                        }
-                    } else {
+                    $value = $this->normalizeComponent($value);
+                    if ($value === false) {
                         continue 2;
                     }
+                    $value = sprintf('f/%01.1f', $value);
                     break;
                 case self::DATETIMEORIGINAL:
                     if (preg_match('/^0000[-:]00[-:]00.00:00:00/', $value) === 1) {
@@ -134,9 +154,9 @@ class ImageMagick implements MapperInterface
                             } catch (\Exception $e) {
                                 $timezone = null;
                             }
-                            $value = new \DateTime($value, $timezone);
+                            $value = new DateTime($value, $timezone);
                         } else {
-                            $value = new \DateTime($value);
+                            $value = new DateTime($value);
                         }
                     } catch (\Exception $e) {
                         continue 2;
@@ -144,6 +164,9 @@ class ImageMagick implements MapperInterface
                     break;
                 case self::EXPOSURETIME:
                     $value = $this->normalizeComponent($value);
+                    if ($value === false) {
+                        continue 2;
+                    }
                     // Based on the source code of Exiftool (PrintExposureTime subroutine):
                     // http://cpansearch.perl.org/src/EXIFTOOL/Image-ExifTool-9.90/lib/Image/ExifTool/Exif.pm
                     if ($value < 0.25001 && $value > 0) {
@@ -159,45 +182,66 @@ class ImageMagick implements MapperInterface
                         $value = reset($focalLengthParts);
                     }
                     $value = $this->normalizeComponent($value);
+                    if ($value === false) {
+                        continue 2;
+                    }
                     break;
                 case self::ISO:
                     $value = preg_split('/([\s,]+)/', $value)[0];
                     break;
+                case self::XRESOLUTION:
+                case self::YRESOLUTION:
+                    $resolutionParts = explode('/', $value);
+                    $value = (int) reset($resolutionParts);
+                    break;
                 case self::GPSLATITUDE:
-                    $latitudeRef = empty($data['exif:GPSLatitudeRef']) ? 'N' : $data['exif:GPSLatitudeRef'][0];
                     $value = $this->extractGPSCoordinates($value);
-                    if ($value !== false) {
-                        $value = (strtoupper($latitudeRef) === 'S' ? -1.0 : 1.0) * $value;
-                    } else {
-                        $value = false;
+                    if ($value === false) {
+                        continue 2;
                     }
-
+                    $latitudeRef = !array_key_exists('exif:GPSLatitudeRef', $data)
+                        || $data['exif:GPSLatitudeRef'] === null || $data['exif:GPSLatitudeRef'] === '' ?
+                        'N' : $data['exif:GPSLatitudeRef'][0];
+                    $value *= strtoupper($latitudeRef) === 'S' ? -1 : 1;
                     break;
                 case self::GPSLONGITUDE:
-                    $longitudeRef = empty($data['exif:GPSLongitudeRef']) ? 'E' : $data['exif:GPSLongitudeRef'][0];
                     $value  = $this->extractGPSCoordinates($value);
-                    if ($value !== false) {
-                        $value  = (strtoupper($longitudeRef) === 'W' ? -1 : 1) * $value;
+                    if ($value === false) {
+                        continue 2;
                     }
-
+                    $longitudeRef = !array_key_exists('exif:GPSLongitudeRef', $data)
+                        || $data['exif:GPSLongitudeRef'] === null || $data['exif:GPSLongitudeRef'] === '' ?
+                        'E' : $data['exif:GPSLongitudeRef'][0];
+                    $value *= strtoupper($longitudeRef) === 'W' ? -1 : 1;
                     break;
                 case self::GPSALTITUDE:
                     $flip = 1;
-                    if (!(empty($data['exif:GPSAltitudeRef']))) {
-                        $flip = ($data['exif:GPSAltitudeRef'] == '1') ? -1 : 1;
+                    if (array_key_exists('exif:GPSAltitudeRef', $data)) {
+                        $flip = ($data['exif:GPSAltitudeRef'] === '1') ? -1 : 1;
                     }
-                    $value = $flip * (float) $this->normalizeComponent($value);
+                    $value = $this->normalizeComponent($value);
+                    if ($value === false) {
+                        continue 2;
+                    }
+                    $value *= $flip;
                     break;
                 case self::IMAGEHEIGHT_PNG:
                 case self::IMAGEWIDTH_PNG:
-                    $value_splitted = explode(",", $value);
+                    $value_split = explode(",", $value);
 
-                    $mappedData[Exif::WIDTH]  = intval($value_splitted[0]);
-                    $mappedData[Exif::HEIGHT] = intval($value_splitted[1]);
+                    $mappedData[Exif::WIDTH]  = intval($value_split[0]);
+                    $mappedData[Exif::HEIGHT] = intval($value_split[1]);
                     continue 2;
-                    break;
                 case self::IMGDIRECTION:
                     $value = $this->normalizeComponent($value);
+                    if ($value === false) {
+                        continue 2;
+                    }
+                    break;
+                case self::KEYWORDS:
+                    if (!is_array($value)) {
+                        $value = [$value];
+                    }
                     break;
             }
             // set end result
@@ -206,13 +250,8 @@ class ImageMagick implements MapperInterface
 
         // add GPS coordinates, if available
         if ((isset($mappedData[Exif::LATITUDE])) && (isset($mappedData[Exif::LONGITUDE]))) {
-            if (($mappedData[Exif::LATITUDE]!==false) && $mappedData[Exif::LONGITUDE]!==false) {
-                $mappedData[Exif::GPS] = sprintf('%s,%s', $mappedData[Exif::LATITUDE], $mappedData[Exif::LONGITUDE]);
-            } else {
-                $mappedData[Exif::GPS] = false;
-            }
-        } else {
-            unset($mappedData[Exif::GPS]);
+            $mappedData[Exif::GPS] =
+                sprintf('%s,%s', (string) $mappedData[Exif::LATITUDE], (string) $mappedData[Exif::LONGITUDE]);
         }
         return $mappedData;
     }
@@ -223,38 +262,41 @@ class ImageMagick implements MapperInterface
      * @param string $coordinates
      * @return float|false
      */
-    protected function extractGPSCoordinates(string $coordinates) : float|false
+    protected function extractGPSCoordinates(string $coordinates): float|false
     {
         if (is_numeric($coordinates) === true) {
             return ((float) $coordinates);
         } else {
-            $m = '!^([1-9][0-9]*\/[1-9][0-9]*), ([1-9][0-9]*\/[1-9][0-9]*), ([1-9][0-9]*\/[1-9][0-9]*)!';
-            if (!preg_match($m, $coordinates, $matches)) {
+            $m = '!^([0-9]+\/[1-9][0-9]*)(?:, ([0-9]+\/[1-9][0-9]*))?(?:, ([0-9]+\/[1-9][0-9]*))?$!';
+            if (preg_match($m, $coordinates, $matches) === 0) {
                 return false;
             }
-            $degree = floatval($this->normalizeComponent($matches[1]));
-            $minutes = floatval($this->normalizeComponent($matches[2]));
-            $seconds = floatval($this->normalizeComponent($matches[3]));
-            return $degree + $minutes / 60 + $seconds / 3600;
+            $degrees = $this->normalizeComponent($matches[1]);
+            $minutes = $this->normalizeComponent($matches[2] ?? 0);
+            $seconds = $this->normalizeComponent($matches[3] ?? 0);
+            if ($degrees === false || $minutes === false || $seconds === false) {
+                return false;
+            }
+            return round($degrees + $minutes / 60 + $seconds / 3600, self::ROUNDING_PRECISION);
         }
     }
 
     /**
      * Normalize component
      *
-     * @param string $component
-     * @return float
+     * @param string $rational
+     * @return float|false
      */
-    protected function normalizeComponent(string $rational) : float
+    protected function normalizeComponent(string $rational): float|false
     {
         $parts = explode('/', $rational, 2);
-        if (count($parts) == 1) {
+        if (count($parts) === 1) {
             return (float) $parts[0];
         }
         // case part[1] is 0, div by 0 is forbidden.
         // Catch case of one entry not being numeric
-        if ($parts[1] == 0 || !is_numeric($parts[0]) || !is_numeric($parts[1])) {
-            return (float) 0;
+        if ($parts[1] === '0' || !is_numeric($parts[0]) || !is_numeric($parts[1])) {
+            return false;
         }
         return (float) $parts[0] / $parts[1];
     }
