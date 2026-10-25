@@ -10,6 +10,7 @@ use PHPExif\Contracts\AdapterInterface;
 use PHPExif\Contracts\ReaderInterface;
 use PHPExif\Exif;
 use PHPExif\Enum\ReaderType;
+use PHPExif\MotionPhoto\MotionPhotoLocator;
 
 /**
  * PHP Exif Reader
@@ -34,22 +35,27 @@ class Reader implements ReaderInterface
      * Factory for the reader
      *
      * @param ReaderType $type
+     * @param string $path
      * @return Reader
      */
-    public static function factory(ReaderType $type): Reader
+    public static function factory(ReaderType $type, string $path = ''): Reader
     {
-        $classname = get_called_class();
         $adapter = match ($type) {
             ReaderType::NATIVE => new NativeAdapter(),
-            ReaderType::EXIFTOOL => new ExiftoolAdapter(),
-            ReaderType::FFPROBE => new FFProbeAdapter(),
+            ReaderType::EXIFTOOL => new ExiftoolAdapter(path: $path),
+            ReaderType::FFPROBE => new FFProbeAdapter(path: $path),
             ReaderType::IMAGICK => new ImageMagickAdapter(),
         };
-        return new $classname($adapter);
+
+        return new Reader($adapter);
     }
 
     /**
      * Reads & parses the EXIF data from given file
+     *
+     * When the adapter reports no `MicroVideoOffset`, the video of a Google
+     * Motion Photo (legacy or Motion Photo 1.0 format) is located from the
+     * file itself, so every adapter reports it the same way.
      *
      * @param string $file
      * @return Exif Instance of Exif object with data
@@ -57,6 +63,13 @@ class Reader implements ReaderInterface
      */
     public function read(string $file): Exif
     {
-        return $this->adapter->getExifFromFile($file);
+        $exif = $this->adapter->getExifFromFile($file);
+        if ($exif->getMicroVideoOffset() !== false) {
+            return $exif;
+        }
+
+        $videoLength = MotionPhotoLocator::locate($file);
+
+        return $videoLength > 0 ? $exif->setMicroVideoOffset((string) $videoLength) : $exif;
     }
 }

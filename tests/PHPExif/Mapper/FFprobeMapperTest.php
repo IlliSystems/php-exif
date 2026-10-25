@@ -3,6 +3,7 @@
 use FFMpeg\FFProbe as FFMpegFFProbe;
 use PHPExif\Contracts\MapperInterface;
 use PHPExif\Mapper\FFprobe;
+use PHPUnit\Framework\Attributes\Group;
 
 class FFprobeMapperTest extends \PHPUnit\Framework\TestCase
 {
@@ -13,17 +14,13 @@ class FFprobeMapperTest extends \PHPUnit\Framework\TestCase
         $this->mapper = new FFprobe();
     }
 
-    /**
-     * @group mapper
-     */
+    #[Group('mapper')]
     public function testClassImplementsCorrectInterface()
     {
         $this->assertInstanceOf(MapperInterface::class, $this->mapper);
     }
 
-    /**
-     * @group mapper
-     */
+    #[Group('mapper')]
     public function testMapRawDataIgnoresFieldIfItDoesntExist()
     {
         $rawData = array('foo' => 'bar');
@@ -32,13 +29,10 @@ class FFprobeMapperTest extends \PHPUnit\Framework\TestCase
         $this->assertCount(0, $mapped);
     }
 
-    /**
-     * @group mapper
-     */
+    #[Group('mapper')]
     public function testMapRawDataMapsFieldsCorrectly()
     {
         $reflProp = new \ReflectionProperty(get_class($this->mapper), 'map');
-        $reflProp->setAccessible(true);
         $map = $reflProp->getValue($this->mapper);
 
         // ignore custom formatted data stuff:
@@ -63,7 +57,7 @@ class FFprobeMapperTest extends \PHPUnit\Framework\TestCase
 
         // create raw data
         $keys = array_keys($map);
-        $values = array();
+        $values = [];
         $values = array_pad($values, count($keys), 'foo');
         $rawData = array_combine($keys, $values);
 
@@ -76,9 +70,7 @@ class FFprobeMapperTest extends \PHPUnit\Framework\TestCase
         }
     }
 
-    /**
-     * @group mapper
-     */
+    #[Group('mapper')]
     public function testMapRawDataCorrectlyFormatsDateTimeOriginal()
     {
         $rawData = array(
@@ -96,9 +88,7 @@ class FFprobeMapperTest extends \PHPUnit\Framework\TestCase
     }
 
 
-    /**
-     * @group mapper
-     */
+    #[Group('mapper')]
     public function testMapRawDataCorrectlyFormatsCreationDateQuicktime()
     {
         $rawData = array(
@@ -124,9 +114,7 @@ class FFprobeMapperTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    /**
-     * @group mapper
-     */
+    #[Group('mapper')]
     public function testMapRawDataCorrectlyFormatsCreationDateWithTimeZone()
     {
         $rawData = array(
@@ -151,9 +139,7 @@ class FFprobeMapperTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    /**
-     * @group mapper
-     */
+    #[Group('mapper')]
     public function testMapRawDataCorrectlyIgnoresIncorrectDateTimeOriginal()
     {
         $rawData = array(
@@ -165,9 +151,7 @@ class FFprobeMapperTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(false, reset($mapped));
     }
 
-    /**
-     * @group mapper
-     */
+    #[Group('mapper')]
     public function testMapRawDataCorrectlyIgnoresIncorrectDateTimeOriginal2()
     {
         $rawData = array(
@@ -179,9 +163,7 @@ class FFprobeMapperTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(false, reset($mapped));
     }
 
-    /**
-     * @group mapper
-     */
+    #[Group('mapper')]
     public function testMapRawDataCorrectlyFormatsQuickTimeGPSData()
     {
         $expected = array(
@@ -202,9 +184,7 @@ class FFprobeMapperTest extends \PHPUnit\Framework\TestCase
         }
     }
 
-    /**
-     * @group mapper
-     */
+    #[Group('mapper')]
     public function testMapRawDataCorrectlyRotatesDimensions()
     {
         $expected = array(
@@ -223,9 +203,7 @@ class FFprobeMapperTest extends \PHPUnit\Framework\TestCase
         }
     }
 
-    /**
-     * @group mapper
-     */
+    #[Group('mapper')]
     public function testMapRawDataCorrectlyFormatsGPSData()
     {
         $expected = array(
@@ -246,9 +224,7 @@ class FFprobeMapperTest extends \PHPUnit\Framework\TestCase
         }
     }
 
-    /**
-     * @group mapper
-     */
+    #[Group('mapper')]
     public function testMapRawDataCorrectlyFramerate()
     {
         $expected = array(
@@ -301,13 +277,10 @@ class FFprobeMapperTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    /**
-     * @group mapper
-     */
+    #[Group('mapper')]
     public function testNormalizeComponentCorrectly()
     {
         $reflMethod = new \ReflectionMethod(FFprobe::class, 'normalizeComponent');
-        $reflMethod->setAccessible(true);
 
         $rawData = array(
             '2/800' => 0.0025,
@@ -328,9 +301,7 @@ class FFprobeMapperTest extends \PHPUnit\Framework\TestCase
         }
     }
 
-    /**
-     * @group mapper
-     */
+    #[Group('mapper')]
     public function testMapRawDataMatchesFieldsWithoutCaseSensibilityOnFirstLetter()
     {
         $rawData = array(
@@ -348,13 +319,10 @@ class FFprobeMapperTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($expected, $keys);
     }
 
-    /**
-     * @group mapper
-     */
+    #[Group('mapper')]
     public function testreadISO6709()
     {
         $reflMethod = new \ReflectionMethod(FFprobe::class, 'readISO6709');
-        $reflMethod->setAccessible(true);
 
         $testcase = array(
           '+27.5916+086.5640+8850/' => array(
@@ -410,14 +378,11 @@ class FFprobeMapperTest extends \PHPUnit\Framework\TestCase
         }
     }
 
-    /**
-     * @group mapper
-     */
+    #[Group('mapper')]
     public function testconvertDMStoDecimal()
     {
 
         $reflMethod = new \ReflectionMethod(FFprobe::class, 'convertDMStoDecimal');
-        $reflMethod->setAccessible(true);
 
         $testcase = array(
           '+27.5916' => array(
@@ -483,10 +448,7 @@ class FFprobeMapperTest extends \PHPUnit\Framework\TestCase
         }
     }
 
-    /**
-     * @group mapper
-     * @covers \PHPExif\Mapper\FFprobe::mapRawData
-     */
+    #[Group('mapper')]
     public function testMapRawDataCorrectlyKeywords()
     {
         $rawData = array(
@@ -501,10 +463,7 @@ class FFprobeMapperTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    /**
-     * @group mapper
-     * @covers \PHPExif\Mapper\FFprobe::mapRawData
-     */
+    #[Group('mapper')]
     public function testMapRawDataCorrectlySplitKeywords()
     {
         $rawData = array(
@@ -519,10 +478,7 @@ class FFprobeMapperTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    /**
-     * @group mapper
-     * @covers \PHPExif\Mapper\FFprobe::mapRawData
-     */
+    #[Group('mapper')]
     public function testMapRawDataCorrectlyArrayKeywords()
     {
         $rawData = array(
