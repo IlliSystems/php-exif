@@ -1,6 +1,7 @@
 <?php
 
 use PHPExif\Adapter\Exiftool;
+use PHPUnit\Framework\Attributes\Group;
 
 class ExiftoolTest extends \PHPUnit\Framework\TestCase
 {
@@ -11,26 +12,20 @@ class ExiftoolTest extends \PHPUnit\Framework\TestCase
         $this->adapter = new Exiftool();
     }
 
-    /**
-     * @group exiftool
-     */
+    #[Group('exiftool')]
     public function testGetToolPathFromProperty()
     {
         $reflProperty = new \ReflectionProperty(Exiftool::class, 'toolPath');
-        $reflProperty->setAccessible(true);
         $expected = '/foo/bar/baz';
         $reflProperty->setValue($this->adapter, $expected);
 
         $this->assertEquals($expected, $this->adapter->getToolPath());
     }
 
-    /**
-     * @group exiftool
-     */
+    #[Group('exiftool')]
     public function testSetToolPathInProperty()
     {
         $reflProperty = new \ReflectionProperty(Exiftool::class, 'toolPath');
-        $reflProperty->setAccessible(true);
 
         $expected = '/tmp';
         $this->adapter->setToolPath($expected);
@@ -38,9 +33,7 @@ class ExiftoolTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($expected, $reflProperty->getValue($this->adapter));
     }
 
-    /**
-     * @group exiftool
-     */
+    #[Group('exiftool')]
     public function testSetToolPathThrowsException()
     {
         $this->expectException('InvalidArgumentException');
@@ -48,21 +41,16 @@ class ExiftoolTest extends \PHPUnit\Framework\TestCase
     }
 
 
-    /**
-     * @group exiftool
-     */
+    #[Group('exiftool')]
     public function testGetToolPathLazyLoadsPath()
     {
         $this->assertIsString($this->adapter->getToolPath());
     }
 
-    /**
-     * @group exiftool
-     */
+    #[Group('exiftool')]
     public function testSetNumericInProperty()
     {
         $reflProperty = new \ReflectionProperty(Exiftool::class, 'numeric');
-        $reflProperty->setAccessible(true);
 
         $expected = true;
         $this->adapter->setNumeric($expected);
@@ -72,12 +60,11 @@ class ExiftoolTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @see URI http://www.sno.phy.queensu.ca/~phil/exiftool/faq.html#Q10
-     * @group exiftool
      */
+    #[Group('exiftool')]
     public function testSetEncodingInProperty()
     {
         $reflProperty = new \ReflectionProperty(Exiftool::class, 'encoding');
-        $reflProperty->setAccessible(true);
 
         $expected = array('iptc' => 'cp1250');
         $input = array('iptc' => 'cp1250', 'exif' => 'utf8', 'foo' => 'bar');
@@ -86,9 +73,7 @@ class ExiftoolTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($expected, $reflProperty->getValue($this->adapter));
     }
 
-    /**
-     * @group exiftool
-     */
+    #[Group('exiftool')]
     public function testGetExifFromFile()
     {
         $file = PHPEXIF_TEST_ROOT . '/files/morning_glory_pool_500.jpg';
@@ -99,9 +84,7 @@ class ExiftoolTest extends \PHPUnit\Framework\TestCase
         $this->assertNotEmpty($result->getRawData());
     }
 
-    /**
-     * @group exiftool
-     */
+    #[Group('exiftool')]
     public function testGetExifFromFileWithUtf8()
     {
         $file = PHPEXIF_TEST_ROOT . '/files/utf8.jpg';
@@ -112,13 +95,21 @@ class ExiftoolTest extends \PHPUnit\Framework\TestCase
         $this->assertNotEmpty($result->getRawData());
     }
 
-    /**
-     * @group exiftool
-     */
+    #[Group('exiftool')]
+    public function testGetExifFromFileWithAvif()
+    {
+        $file = PHPEXIF_TEST_ROOT . '/files/fox.profile0.10bpc.yuv420.avif';
+        $this->adapter->setOptions(array('encoding' => array('utf8')));
+        $result = $this->adapter->getExifFromFile($file);
+        $this->assertInstanceOf('\PHPExif\Exif', $result);
+        $this->assertIsArray($result->getRawData());
+        $this->assertNotEmpty($result->getRawData());
+    }
+
+    #[Group('exiftool')]
     public function testGetCliOutput()
     {
         $reflMethod = new \ReflectionMethod(Exiftool::class, 'getCliOutput');
-        $reflMethod->setAccessible(true);
 
         $result = $reflMethod->invoke(
             $this->adapter,
@@ -129,5 +120,59 @@ class ExiftoolTest extends \PHPUnit\Framework\TestCase
         );
 
         $this->assertIsString($result);
+    }
+
+    /**
+     * Reads the XMP-GPano tags of a photo sphere. ImageMagickTest asserts the
+     * same values, so both adapters return identical getter values.
+     */
+    #[Group('exiftool')]
+    public function testGetPanoramaDataFromFile()
+    {
+        if ($this->adapter->getToolPath() === '') {
+            $this->markTestSkipped('exiftool is not available.');
+        }
+        $file = PHPEXIF_TEST_ROOT . '/files/gpano.jpg';
+        $result = $this->adapter->getExifFromFile($file);
+
+        $this->assertSame('equirectangular', $result->getProjectionType());
+        $this->assertSame(true, $result->getUsePanoramaViewer());
+        $this->assertSame(8000, $result->getFullPanoWidthPixels());
+        $this->assertSame(4000, $result->getFullPanoHeightPixels());
+        $this->assertSame(1000, $result->getCroppedAreaLeftPixels());
+        $this->assertSame(1000, $result->getCroppedAreaTopPixels());
+        $this->assertSame(6000, $result->getCroppedAreaImageWidthPixels());
+        $this->assertSame(2000, $result->getCroppedAreaImageHeightPixels());
+    }
+
+    /**
+     * gpano.jpg carries ExposureCompensation -2/3 EV and manual white balance.
+     * The Native, Exiftool and ImageMagick adapter tests assert the same values.
+     */
+    #[Group('exiftool')]
+    public function testGetExposureBiasAndWhiteBalanceFromFile()
+    {
+        if ($this->adapter->getToolPath() === '') {
+            $this->markTestSkipped('exiftool is not available.');
+        }
+        $result = $this->adapter->getExifFromFile(PHPEXIF_TEST_ROOT . '/files/gpano.jpg');
+
+        $this->assertSame(-0.67, $result->getExposureBias());
+        $this->assertSame(1, $result->getWhiteBalance());
+    }
+
+    /**
+     * gpano.jpg carries XMP-crs:ColorTemperature 5500.
+     * Only the exiftool adapter reads the colour temperature.
+     */
+    #[Group('exiftool')]
+    public function testGetWhiteBalanceTemperatureFromFile()
+    {
+        if ($this->adapter->getToolPath() === '') {
+            $this->markTestSkipped('exiftool is not available.');
+        }
+        $result = $this->adapter->getExifFromFile(PHPEXIF_TEST_ROOT . '/files/gpano.jpg');
+
+        $this->assertSame(5500, $result->getWhiteBalanceTemperature());
     }
 }

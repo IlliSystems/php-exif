@@ -26,6 +26,7 @@ class Native extends AbstractMapper
     public const DATETIMEORIGINAL = 'DateTimeOriginal';
     public const CREDIT           = 'credit';
     public const EXPOSURETIME     = 'ExposureTime';
+    public const EXPOSUREBIAS     = 'ExposureBiasValue';
     public const FILESIZE         = 'FileSize';
     public const FILENAME         = 'FileName';
     public const FOCALLENGTH      = 'FocalLength';
@@ -41,6 +42,7 @@ class Native extends AbstractMapper
     public const SOFTWARE         = 'Software';
     public const SOURCE           = 'source';
     public const TITLE            = 'title';
+    public const WHITEBALANCE     = 'WhiteBalance';
     public const WIDTH            = 'Width';
     public const XRESOLUTION      = 'XResolution';
     public const YRESOLUTION      = 'YResolution';
@@ -110,6 +112,7 @@ class Native extends AbstractMapper
         self::COLORSPACE       => Exif::COLORSPACE,
         self::DATETIMEORIGINAL => Exif::CREATION_DATE,
         self::EXPOSURETIME     => Exif::EXPOSURE,
+        self::EXPOSUREBIAS     => Exif::EXPOSURE_BIAS,
         self::FILESIZE         => Exif::FILESIZE,
         self::FILENAME         => Exif::FILENAME,
         self::FOCALLENGTH      => Exif::FOCAL_LENGTH,
@@ -119,6 +122,7 @@ class Native extends AbstractMapper
         self::SOFTWARE         => Exif::SOFTWARE,
         self::XRESOLUTION      => Exif::HORIZONTAL_RESOLUTION,
         self::YRESOLUTION      => Exif::VERTICAL_RESOLUTION,
+        self::WHITEBALANCE     => Exif::WHITE_BALANCE,
         self::GPSLATITUDE      => Exif::LATITUDE,
         self::GPSLONGITUDE     => Exif::LONGITUDE,
         self::GPSALTITUDE      => Exif::ALTITUDE,
@@ -147,7 +151,7 @@ class Native extends AbstractMapper
      */
     public function mapRawData(array $data): array
     {
-        $mappedData = array();
+        $mappedData = [];
 
         foreach ($data as $field => $value) {
             if ($this->isSection($field) && is_array($value)) {
@@ -171,8 +175,8 @@ class Native extends AbstractMapper
                     if (preg_match('/^0000[-:]00[-:]00.00:00:00/', $value) === 1) {
                         continue 2;
                     }
-                    // Check if OffsetTimeOriginal (0x9011) is available
                     try {
+                        // Check if OffsetTimeOriginal (0x9011) is available
                         if (isset($data['UndefinedTag:0x9011'])) {
                             try {
                                 $timezone = new \DateTimeZone($data['UndefinedTag:0x9011']);
@@ -180,11 +184,19 @@ class Native extends AbstractMapper
                                 $timezone = null;
                             }
                             $value = new DateTime($value, $timezone);
+                        // Check if OffsetTime (0x9010) is available
+                        } elseif (isset($data['UndefinedTag:0x9010'])) {
+                            try {
+                                $timezone = new \DateTimeZone($data['UndefinedTag:0x9010']);
+                            } catch (\Exception $e) {
+                                $timezone = null;
+                            }
+                                $value = new DateTime($value, $timezone);
                         } else {
                             $value = new DateTime($value);
                         }
                     } catch (\Exception $e) {
-                        // Provided DateTimeOriginal or OffsetTimeOriginal invalid
+                        // Provided DateTimeOriginal or OffsetTimeOriginal or OffsetTime invalid
                         continue 2;
                     }
                     break;
@@ -203,6 +215,18 @@ class Native extends AbstractMapper
                     } else {
                         $value = sprintf('%.1f', $value);
                         $value = preg_replace('/.0$/', '', $value);
+                    }
+                    break;
+                case self::EXPOSUREBIAS:
+                    $value = $this->normalizeExposureBias($value);
+                    if ($value === null) {
+                        continue 2;
+                    }
+                    break;
+                case self::WHITEBALANCE:
+                    $value = $this->normalizeWhiteBalance($value);
+                    if ($value === null) {
+                        continue 2;
                     }
                     break;
                 case self::FOCALLENGTH:

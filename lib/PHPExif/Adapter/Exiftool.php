@@ -32,8 +32,21 @@ class Exiftool extends AbstractAdapter
      */
     protected string $toolPath = '';
     protected bool $numeric = true;
-    protected array $encoding = array();
+    protected array $encoding = [];
     protected string $mapperClass = MapperExiftool::class;
+
+    /**
+     * Set up Exiftool adapter
+     *
+     * @param array $options option to be passed to the parent
+     * @param string $path optional path to the tool
+     * @return self
+     */
+    public function __construct(array $options = [], string $path = '')
+    {
+        parent::__construct($options);
+        $this->toolPath = $path;
+    }
 
     /**
      * Setter for the exiftool binary path
@@ -189,6 +202,7 @@ class Exiftool extends AbstractAdapter
             2 => array('pipe', 'a')
         );
 
+        // @phpstan-ignore-next-line This is properly handle below, no need for the Safe version.
         $process = proc_open($command, $descriptorspec, $pipes);
 
         if (!is_resource($process)) {
@@ -201,9 +215,8 @@ class Exiftool extends AbstractAdapter
         fclose($pipes[0]);
         fclose($pipes[1]);
         fclose($pipes[2]);
-
+        // @phpstan-ignore-next-line We do not need to care for that.
         proc_close($process);
-
         return $result;
     }
 }

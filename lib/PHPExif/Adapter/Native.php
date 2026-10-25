@@ -41,7 +41,7 @@ class Native extends AbstractAdapter
      *
      * @var array
      */
-    protected array $requiredSections = array();
+    protected array $requiredSections = [];
 
     /**
      * Include the thumbnail in the EXIF data?
@@ -200,7 +200,7 @@ class Native extends AbstractAdapter
 
         // exif_read_data failed to read exif data (i.e. not a jpg/tiff)
         if (false === $data) {
-            $data = array();
+            $data = [];
             $data['FileSize'] = filesize($file);
             $data['FileName'] = basename($file);
             $data['MimeType'] = $mimeType;
@@ -212,10 +212,8 @@ class Native extends AbstractAdapter
         if (!(array_key_exists('height', $data)) || !(array_key_exists('width', $data))) {
             try {
                 $img_size = getimagesize($file);
-                if ($img_size[0] !== null && $img_size[1] !== null) {
-                    $data['width'] = $img_size[0];
-                    $data['height'] = $img_size[1];
-                }
+                $data['width'] = $img_size[0];
+                $data['height'] = $img_size[1];
             } catch (ImageException) {
                 // Fail silently
             }
@@ -248,7 +246,7 @@ class Native extends AbstractAdapter
     public function getIptcData(string $file): array
     {
         getimagesize($file, $info);
-        $arrData = array();
+        $arrData = [];
         if (isset($info['APP13'])) {
             try {
                 $iptc = iptcparse($info['APP13']);
